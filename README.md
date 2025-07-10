@@ -18,3 +18,40 @@
 ## 📝 Notes
 
 - [`react-native-reanimated` docs](https://docs.swmansion.com/react-native-reanimated/)
+
+## Develop the Game Engine
+
+### 1. Player Plane & Movement
+- Render the player's spaceship at the bottom of the screen
+- Implement touch or drag controls to move the player left/right
+- Display the player's position visually
+
+### 2. Background Stars
+- Add a simple animated starfield background
+- Stars should move downward to create a sense of motion
+
+### 3. Enemy Ships
+- Render basic enemy ships at the top of the screen
+- Make them move downward at a constant speed
+- No shooting or collision yet
+
+### 4. Player Shooting
+- Allow the player to shoot bullets upward by tapping or holding a button
+- Render bullets and make them move upward
+
+### 5. Enemy Collisions & Scoring
+- Detect collisions between player bullets and enemy ships
+- Remove hit enemies and increment the score
+
+### 6. Enemy Shooting & Player Health
+- Make enemies shoot bullets downward
+- Detect collisions with the player and reduce health
+
+### 7. Game Over & Restart
+- End the game when the player's health reaches zero
+- Show a game over screen and allow restarting
+
+### 8. Visual & Audio Effects
+- Add explosion animations
+- Add sound effects
+- Polish UI elements
