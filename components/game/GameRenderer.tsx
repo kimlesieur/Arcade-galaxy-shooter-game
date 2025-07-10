@@ -4,15 +4,11 @@ import { Group, Path, Skia, Rect } from '@shopify/react-native-skia';
 interface MinimalGameRendererProps {
   playerX: number;
   playerY: number;
-  screenWidth: number;
-  screenHeight: number;
 }
 
 export default function GameRenderer({
   playerX,
   playerY,
-  screenWidth,
-  screenHeight,
 }: MinimalGameRendererProps) {
   // Create player ship path
   const playerShipPath = useMemo(() => {
@@ -29,7 +25,6 @@ export default function GameRenderer({
 
   return (
     <>
-      <Rect x={0} y={0} width={screenWidth} height={screenHeight} color="#111a2a" />
       <Group
         transform={[
           { translateX: playerX },
