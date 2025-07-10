@@ -35,254 +35,254 @@ export default function GameScreen() {
   const playerX = useSharedValue(SCREEN_WIDTH / 2);
   const currentTime = useSharedValue(0);
 
-  const triggerHaptic = useCallback(() => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  }, []);
+  // const triggerHaptic = useCallback(() => {
+  //   if (Platform.OS !== 'web') {
+  //     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  //   }
+  // }, []);
 
-  const restartGame = useCallback(() => {
-    setGameState(INITIAL_GAME_STATE);
-    setEnemies([]);
-    setProjectiles([]);
-    setExplosions([]);
-    setPowerUps([]);
-    playerX.value = SCREEN_WIDTH / 2;
-    currentTime.value = 0;
-  }, [playerX, currentTime]);
+  // const restartGame = useCallback(() => {
+  //   setGameState(INITIAL_GAME_STATE);
+  //   setEnemies([]);
+  //   setProjectiles([]);
+  //   setExplosions([]);
+  //   setPowerUps([]);
+  //   playerX.value = SCREEN_WIDTH / 2;
+  //   currentTime.value = 0;
+  // }, [playerX, currentTime]);
 
-  const updateGameState = useCallback((updates: Partial<GameState>) => {
-    setGameState(prev => ({ ...prev, ...updates }));
-  }, []);
+  // const updateGameState = useCallback((updates: Partial<GameState>) => {
+  //   setGameState(prev => ({ ...prev, ...updates }));
+  // }, []);
 
-  const addExplosion = useCallback((x: number, y: number, type: 'enemy' | 'player' = 'enemy') => {
-    const explosion: Explosion = {
-      id: (Date.now() + Math.random()).toString(),
-      x,
-      y,
-      scale: 0,
-      opacity: 1,
-      particles: Array.from({ length: 8 }, (_, i) => ({
-        angle: (i * Math.PI * 2) / 8,
-        speed: 50 + Math.random() * 50,
-        x: 0,
-        y: 0,
-      })),
-      type,
-      createdAt: currentTime.value,
-    };
-    setExplosions(prev => [...prev, explosion]);
-    triggerHaptic();
-  }, [currentTime, triggerHaptic]);
+  // const addExplosion = useCallback((x: number, y: number, type: 'enemy' | 'player' = 'enemy') => {
+  //   const explosion: Explosion = {
+  //     id: (Date.now() + Math.random()).toString(),
+  //     x,
+  //     y,
+  //     scale: 0,
+  //     opacity: 1,
+  //     particles: Array.from({ length: 8 }, (_, i) => ({
+  //       angle: (i * Math.PI * 2) / 8,
+  //       speed: 50 + Math.random() * 50,
+  //       x: 0,
+  //       y: 0,
+  //     })),
+  //     type,
+  //     createdAt: currentTime.value,
+  //   };
+  //   setExplosions(prev => [...prev, explosion]);
+  //   triggerHaptic();
+  // }, [currentTime, triggerHaptic]);
 
-  const spawnProjectile = useCallback((x: number, y: number, isPlayer: boolean = true) => {
-    const projectile: Projectile = {
-      id: (Date.now() + Math.random()).toString(),
-      x,
-      y,
-      velocityX: 0,
-      velocityY: isPlayer ? -400 : 200,
-      isPlayer,
-      damage: 1,
-      radius: 3,
-    };
-    setProjectiles(prev => [...prev, projectile]);
-  }, []);
+  // const spawnProjectile = useCallback((x: number, y: number, isPlayer: boolean = true) => {
+  //   const projectile: Projectile = {
+  //     id: (Date.now() + Math.random()).toString(),
+  //     x,
+  //     y,
+  //     velocityX: 0,
+  //     velocityY: isPlayer ? -400 : 200,
+  //     isPlayer,
+  //     damage: 1,
+  //     radius: 3,
+  //   };
+  //   setProjectiles(prev => [...prev, projectile]);
+  // }, []);
 
-  const spawnPowerUp = useCallback((x: number, y: number) => {
-    if (Math.random() < 0.15) { // 15% chance
-      const types: PowerUp['type'][] = ['extraLife', 'rapidFire', 'shield'];
-      const powerUp: PowerUp = {
-        id: (Date.now() + Math.random()).toString(),
-        x,
-        y,
-        type: types[Math.floor(Math.random() * types.length)],
-        velocityY: 100,
-        radius: 15,
-      };
-      setPowerUps(prev => [...prev, powerUp]);
-    }
-  }, []);
+  // const spawnPowerUp = useCallback((x: number, y: number) => {
+  //   if (Math.random() < 0.15) { // 15% chance
+  //     const types: PowerUp['type'][] = ['extraLife', 'rapidFire', 'shield'];
+  //     const powerUp: PowerUp = {
+  //       id: (Date.now() + Math.random()).toString(),
+  //       x,
+  //       y,
+  //       type: types[Math.floor(Math.random() * types.length)],
+  //       velocityY: 100,
+  //       radius: 15,
+  //     };
+  //     setPowerUps(prev => [...prev, powerUp]);
+  //   }
+  // }, []);
 
-  const panGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      const newX = Math.max(30, Math.min(SCREEN_WIDTH - 30, event.absoluteX));
-      playerX.value = newX;
-      runOnJS(updateGameState)({ playerX: newX });
-    });
+  // const panGesture = Gesture.Pan()
+  //   .onUpdate((event) => {
+  //     const newX = Math.max(30, Math.min(SCREEN_WIDTH - 30, event.absoluteX));
+  //     playerX.value = newX;
+  //     runOnJS(updateGameState)({ playerX: newX });
+  //   });
 
-  const frameCallback = useFrameCallback((frameInfo) => {
-    currentTime.value = frameInfo.timestamp;
-    const deltaTime = frameInfo.timeSincePreviousFrame || 16;
-    const dt = deltaTime / 1000;
+  // const frameCallback = useFrameCallback((frameInfo) => {
+  //   currentTime.value = frameInfo.timestamp;
+  //   const deltaTime = frameInfo.timeSincePreviousFrame || 16;
+  //   const dt = deltaTime / 1000;
 
-    if (gameState.gameStatus !== 'playing') return;
+  //   if (gameState.gameStatus !== 'playing') return;
 
-    // Auto-fire player projectiles
-    if (currentTime.value - gameState.lastFireTime > gameState.fireRate) {
-      runOnJS(spawnProjectile)(gameState.playerX, gameState.playerY, true);
-      runOnJS(updateGameState)({ lastFireTime: currentTime.value });
-    }
+  //   // Auto-fire player projectiles
+  //   if (currentTime.value - gameState.lastFireTime > gameState.fireRate) {
+  //     runOnJS(spawnProjectile)(gameState.playerX, gameState.playerY, true);
+  //     runOnJS(updateGameState)({ lastFireTime: currentTime.value });
+  //   }
 
-    // Update projectiles
-    runOnJS(setProjectiles)((prev) => 
-      prev.map(p => ({
-        ...p,
-        y: p.y + p.velocityY * dt,
-        x: p.x + p.velocityX * dt,
-      })).filter(p => !isOffScreen(p.x, p.y, SCREEN_WIDTH, SCREEN_HEIGHT))
-    );
+  //   // Update projectiles
+  //   runOnJS(setProjectiles)((prev) => 
+  //     prev.map(p => ({
+  //       ...p,
+  //       y: p.y + p.velocityY * dt,
+  //       x: p.x + p.velocityX * dt,
+  //     })).filter(p => !isOffScreen(p.x, p.y, SCREEN_WIDTH, SCREEN_HEIGHT))
+  //   );
 
-    // Update enemies
-    runOnJS(setEnemies)((prev) => 
-      prev.map(enemy => ({
-        ...enemy,
-        y: enemy.y + enemy.velocityY * dt,
-        x: enemy.x + enemy.velocityX * dt,
-      })).filter(enemy => {
-        if (enemy.y > SCREEN_HEIGHT + 50) {
-          // Enemy escaped - lose a life
-          setGameState(prevState => {
-            const newLives = prevState.lives - 1;
-            return {
-              ...prevState,
-              lives: newLives,
-              gameStatus: newLives <= 0 ? 'gameOver' : 'playing',
-            };
-          });
-          return false;
-        }
-        return true;
-      })
-    );
+  //   // Update enemies
+  //   runOnJS(setEnemies)((prev) => 
+  //     prev.map(enemy => ({
+  //       ...enemy,
+  //       y: enemy.y + enemy.velocityY * dt,
+  //       x: enemy.x + enemy.velocityX * dt,
+  //     })).filter(enemy => {
+  //       if (enemy.y > SCREEN_HEIGHT + 50) {
+  //         // Enemy escaped - lose a life
+  //         setGameState(prevState => {
+  //           const newLives = prevState.lives - 1;
+  //           return {
+  //             ...prevState,
+  //             lives: newLives,
+  //             gameStatus: newLives <= 0 ? 'gameOver' : 'playing',
+  //           };
+  //         });
+  //         return false;
+  //       }
+  //       return true;
+  //     })
+  //   );
 
-    // Update explosions
-    runOnJS(setExplosions)((prev) =>
-      prev.map(explosion => ({
-        ...explosion,
-        scale: Math.min(2, explosion.scale + dt * 4),
-        opacity: Math.max(0, explosion.opacity - dt * 2),
-        particles: explosion.particles.map(particle => ({
-          ...particle,
-          x: particle.x + Math.cos(particle.angle) * particle.speed * dt,
-          y: particle.y + Math.sin(particle.angle) * particle.speed * dt,
-        })),
-      })).filter(explosion => explosion.opacity > 0)
-    );
+  //   // Update explosions
+  //   runOnJS(setExplosions)((prev) =>
+  //     prev.map(explosion => ({
+  //       ...explosion,
+  //       scale: Math.min(2, explosion.scale + dt * 4),
+  //       opacity: Math.max(0, explosion.opacity - dt * 2),
+  //       particles: explosion.particles.map(particle => ({
+  //         ...particle,
+  //         x: particle.x + Math.cos(particle.angle) * particle.speed * dt,
+  //         y: particle.y + Math.sin(particle.angle) * particle.speed * dt,
+  //       })),
+  //     })).filter(explosion => explosion.opacity > 0)
+  //   );
 
-    // Update power-ups
-    runOnJS(setPowerUps)((prev) =>
-      prev.map(powerUp => ({
-        ...powerUp,
-        y: powerUp.y + powerUp.velocityY * dt,
-      })).filter(powerUp => !isOffScreen(powerUp.x, powerUp.y, SCREEN_WIDTH, SCREEN_HEIGHT))
-    );
+  //   // Update power-ups
+  //   runOnJS(setPowerUps)((prev) =>
+  //     prev.map(powerUp => ({
+  //       ...powerUp,
+  //       y: powerUp.y + powerUp.velocityY * dt,
+  //     })).filter(powerUp => !isOffScreen(powerUp.x, powerUp.y, SCREEN_WIDTH, SCREEN_HEIGHT))
+  //   );
 
-    // Collision detection
-    runOnJS(setProjectiles)((prevProjectiles) => {
-      const remainingProjectiles: Projectile[] = [];
+  //   // Collision detection
+  //   runOnJS(setProjectiles)((prevProjectiles) => {
+  //     const remainingProjectiles: Projectile[] = [];
       
-      prevProjectiles.forEach(projectile => {
-        let projectileDestroyed = false;
+  //     prevProjectiles.forEach(projectile => {
+  //       let projectileDestroyed = false;
 
-        if (projectile.isPlayer) {
-          // Check collision with enemies
-          setEnemies(prevEnemies => {
-            return prevEnemies.map(enemy => {
-              if (checkCollision(
-                projectile.x - projectile.radius, projectile.y - projectile.radius,
-                projectile.radius * 2, projectile.radius * 2,
-                enemy.x, enemy.y, enemy.width, enemy.height
-              )) {
-                projectileDestroyed = true;
-                const newHealth = enemy.health - projectile.damage;
+  //       if (projectile.isPlayer) {
+  //         // Check collision with enemies
+  //         setEnemies(prevEnemies => {
+  //           return prevEnemies.map(enemy => {
+  //             if (checkCollision(
+  //               projectile.x - projectile.radius, projectile.y - projectile.radius,
+  //               projectile.radius * 2, projectile.radius * 2,
+  //               enemy.x, enemy.y, enemy.width, enemy.height
+  //             )) {
+  //               projectileDestroyed = true;
+  //               const newHealth = enemy.health - projectile.damage;
                 
-                if (newHealth <= 0) {
-                  // Enemy destroyed
-                  runOnJS(addExplosion)(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 'enemy');
-                  runOnJS(spawnPowerUp)(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
-                  setGameState(prevState => ({
-                    ...prevState,
-                    score: prevState.score + enemy.points,
-                    enemiesRemaining: Math.max(0, prevState.enemiesRemaining - 1),
-                  }));
-                  return { ...enemy, health: 0 }; // Will be filtered out
-                }
+  //               if (newHealth <= 0) {
+  //                 // Enemy destroyed
+  //                 runOnJS(addExplosion)(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 'enemy');
+  //                 runOnJS(spawnPowerUp)(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+  //                 setGameState(prevState => ({
+  //                   ...prevState,
+  //                   score: prevState.score + enemy.points,
+  //                   enemiesRemaining: Math.max(0, prevState.enemiesRemaining - 1),
+  //                 }));
+  //                 return { ...enemy, health: 0 }; // Will be filtered out
+  //               }
                 
-                return { ...enemy, health: newHealth };
-              }
-              return enemy;
-            }).filter(enemy => enemy.health > 0);
-          });
-        }
+  //               return { ...enemy, health: newHealth };
+  //             }
+  //             return enemy;
+  //           }).filter(enemy => enemy.health > 0);
+  //         });
+  //       }
 
-        if (!projectileDestroyed) {
-          remainingProjectiles.push(projectile);
-        }
-      });
+  //       if (!projectileDestroyed) {
+  //         remainingProjectiles.push(projectile);
+  //       }
+  //     });
 
-      return remainingProjectiles;
-    });
+  //     return remainingProjectiles;
+  //   });
 
-    // Check power-up collection
-    runOnJS(setPowerUps)((prevPowerUps) => {
-      return prevPowerUps.filter(powerUp => {
-        if (checkCollision(
-          gameState.playerX - 30, gameState.playerY - 20,
-          60, 40,
-          powerUp.x - powerUp.radius, powerUp.y - powerUp.radius,
-          powerUp.radius * 2, powerUp.radius * 2
-        )) {
-          // Apply power-up effect
-          setGameState(prevState => {
-            switch (powerUp.type) {
-              case 'extraLife':
-                return { ...prevState, lives: prevState.lives + 1 };
-              case 'rapidFire':
-                return { ...prevState, fireRate: Math.max(50, prevState.fireRate * 0.5) };
-              case 'shield':
-                return prevState; // TODO: Implement shield
-              default:
-                return prevState;
-            }
-          });
-          return false; // Remove power-up
-        }
-        return true;
-      });
-    });
+  //   // Check power-up collection
+  //   runOnJS(setPowerUps)((prevPowerUps) => {
+  //     return prevPowerUps.filter(powerUp => {
+  //       if (checkCollision(
+  //         gameState.playerX - 30, gameState.playerY - 20,
+  //         60, 40,
+  //         powerUp.x - powerUp.radius, powerUp.y - powerUp.radius,
+  //         powerUp.radius * 2, powerUp.radius * 2
+  //       )) {
+  //         // Apply power-up effect
+  //         setGameState(prevState => {
+  //           switch (powerUp.type) {
+  //             case 'extraLife':
+  //               return { ...prevState, lives: prevState.lives + 1 };
+  //             case 'rapidFire':
+  //               return { ...prevState, fireRate: Math.max(50, prevState.fireRate * 0.5) };
+  //             case 'shield':
+  //               return prevState; // TODO: Implement shield
+  //             default:
+  //               return prevState;
+  //           }
+  //         });
+  //         return false; // Remove power-up
+  //       }
+  //       return true;
+  //     });
+  //   });
 
-    // Spawn enemies
-    if (currentTime.value - gameState.waveSpawnTimer > 3000) { // Every 3 seconds
-      spawnEnemyWave(gameState.currentWave, SCREEN_WIDTH, (newEnemies) => {
-        runOnJS(setEnemies)(prev => [...prev, ...(Array.isArray(newEnemies) ? newEnemies : [])]);
-        runOnJS(setGameState)(prevState => ({
-          ...prevState,
-          waveSpawnTimer: currentTime.value,
-          enemiesRemaining: prevState.enemiesRemaining + (Array.isArray(newEnemies) ? newEnemies.length : 0),
-          currentWave: prevState.currentWave + 1,
-        }));
-      });
-    }
+  //   // Spawn enemies
+  //   if (currentTime.value - gameState.waveSpawnTimer > 3000) { // Every 3 seconds
+  //     spawnEnemyWave(gameState.currentWave, SCREEN_WIDTH, (newEnemies) => {
+  //       runOnJS(setEnemies)(prev => [...prev, ...(Array.isArray(newEnemies) ? newEnemies : [])]);
+  //       runOnJS(setGameState)(prevState => ({
+  //         ...prevState,
+  //         waveSpawnTimer: currentTime.value,
+  //         enemiesRemaining: prevState.enemiesRemaining + (Array.isArray(newEnemies) ? newEnemies.length : 0),
+  //         currentWave: prevState.currentWave + 1,
+  //       }));
+  //     });
+  //   }
 
-    // Check win condition
-    if (gameState.enemiesRemaining === 0 && enemies.length === 0 && gameState.currentWave > 5) {
-      runOnJS(updateGameState)({ gameStatus: 'won' });
-    }
-  });
+  //   // Check win condition
+  //   if (gameState.enemiesRemaining === 0 && enemies.length === 0 && gameState.currentWave > 5) {
+  //     runOnJS(updateGameState)({ gameStatus: 'won' });
+  //   }
+  // });
 
-  useEffect(() => {
-    // Initial enemy spawn
-    spawnEnemyWave(1, SCREEN_WIDTH, (newEnemies) => {
-      setEnemies(newEnemies);
-      updateGameState({ enemiesRemaining: newEnemies.length });
-    });
-  }, []);
+  // useEffect(() => {
+  //   // Initial enemy spawn
+  //   spawnEnemyWave(1, SCREEN_WIDTH, (newEnemies) => {
+  //     setEnemies(newEnemies);
+  //     updateGameState({ enemiesRemaining: newEnemies.length });
+  //   });
+  // }, []);
 
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.gameArea}>
-        <GestureDetector gesture={panGesture}>
+        {/* <GestureDetector gesture={panGesture}>
           <Canvas style={styles.canvas}>
             <GameRenderer
               gameState={gameState}
@@ -295,7 +295,7 @@ export default function GameScreen() {
               currentTime={currentTime}
             />
           </Canvas>
-        </GestureDetector>
+        </GestureDetector> */}
         
         {/* HUD */}
         <View style={styles.hud}>
@@ -311,7 +311,7 @@ export default function GameScreen() {
               {gameState.gameStatus === 'won' ? 'YOU WIN!' : 'GAME OVER'}
             </Text>
             <Text style={styles.finalScoreText}>Final Score: {gameState.score}</Text>
-            <TouchableOpacity style={styles.restartButton} onPress={restartGame}>
+            <TouchableOpacity style={styles.restartButton} onPress={() => console.log('restart')}>
               <Text style={styles.restartButtonText}>Play Again</Text>
             </TouchableOpacity>
           </View>
