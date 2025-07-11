@@ -50,10 +50,12 @@
 - End the game when the player's health reaches zero
 - Show a game over screen and allow restarting
 
-### 8. Visual & Audio Effects
-- Add explosion animations
+### 8. Audio Effects
 - Add haptic feedback on player collisions
 - Add sound effects
+
+### 9. Visual Effects
+- Add explosion animations
 - Polish UI elements
 
 

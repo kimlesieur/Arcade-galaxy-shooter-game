@@ -11,6 +11,8 @@ import GameRenderer from './game/GameRenderer';
 import Starfield from './game/Starfield';
 import { Bullet, EnemyShip } from './game/types';
 import { isOffScreen, checkCollision } from './game/utils';
+import { Audio } from 'expo-av';
+import * as Haptics from 'expo-haptics';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -72,6 +74,40 @@ export default function GameScreen() {
   // Track purple enemy count
   const purpleEnemyCountRef = React.useRef(0);
 
+  // Audio state for background music
+  const soundRef = React.useRef<Audio.Sound | null>(null);
+
+  // Play background music when game starts, stop when game over
+  React.useEffect(() => {
+    let isMounted = true;
+    async function playMusic() {
+      if (soundRef.current) {
+        await soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+      const { sound } = await Audio.Sound.createAsync(
+        require('../assets/sounds/theme_2.wav'),
+        { shouldPlay: true, isLooping: true, volume: 0.5 }
+      );
+      soundRef.current = sound;
+      await sound.playAsync();
+    }
+    if (!gameOver) {
+      playMusic();
+    } else {
+      if (soundRef.current) {
+        soundRef.current.stopAsync();
+      }
+    }
+    return () => {
+      isMounted = false;
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+    };
+  }, [gameOver]);
+
   // Add a restart handler
   const handleRestart = () => {
     setScore(0);
@@ -83,6 +119,10 @@ export default function GameScreen() {
     purpleEnemyCountRef.current = 0;
     spawnTimer.current = 0;
     lastFrameTime.current = null;
+    // Restart music
+    if (soundRef.current) {
+      soundRef.current.replayAsync();
+    }
   };
 
   // Game loop for enemies and collision
@@ -209,6 +249,8 @@ export default function GameScreen() {
                  purpleEnemyCountRef.current = Math.max(0, purpleEnemyCountRef.current - 1);
                }
               newEnemies.splice(i, 1);
+              // Haptic feedback on collision
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
               setPlayerHealth((h) => {
                 const newHealth = h - 1;
                 if (newHealth <= 0) setGameOver(true);
