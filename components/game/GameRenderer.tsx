@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Group, Path, Skia, Rect, Circle } from '@shopify/react-native-skia';
+import { Group, Path, Skia, Rect, Circle, Image, useImage } from '@shopify/react-native-skia';
 import { EnemyShip, Bullet } from './types';
 
 interface MinimalGameRendererProps {
@@ -22,7 +22,10 @@ export default function GameRenderer({
   bullets,
   enemies,
 }: MinimalGameRendererProps) {
-  // Create player ship path
+  // Load the player ship image
+  const playerShipImage = useImage(require('../../assets/images/player_ship.png'));
+
+  // Create player ship path (fallback if image fails to load)
   const playerShipPath = useMemo(() => {
     const path = Skia.Path.Make();
     path.moveTo(0, 0);
@@ -68,7 +71,17 @@ export default function GameRenderer({
       ))}
       {/* Player ship */}
       <Group transform={[{ translateX: playerX }, { translateY: playerY }]}>
-        <Path path={playerShipPath} color="#00ffff" />
+        {playerShipImage ? (
+          <Image
+            image={playerShipImage}
+            x={-20} // Center the image (assuming 40x40 image)
+            y={-20}
+            width={40}
+            height={40}
+          />
+        ) : (
+          <Path path={playerShipPath} color="#00ffff" />
+        )}
       </Group>
     </>
   );
