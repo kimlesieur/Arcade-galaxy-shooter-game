@@ -13,13 +13,14 @@ import { Bullet, EnemyShip } from './game/types';
 import { isOffScreen, checkCollision } from './game/utils';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const TAB_BAR_HEIGHT = 56; // Adjust if your tab bar is a different height
 
 export default function GameScreen() {
   const [playerX, setPlayerX] = useState(SCREEN_WIDTH / 2);
   const playerY = SCREEN_HEIGHT - 180;
+  const tabBarHeight = useBottomTabBarHeight();
 
   // Ref to always have latest player position
   const playerPosRef = React.useRef({ x: playerX, y: playerY });
@@ -185,7 +186,7 @@ export default function GameScreen() {
         }));
         // Remove enemies that are off screen, and handle purple enemy effect
         updated = updated.filter((enemy) => {
-          if (enemy.y * SCREEN_HEIGHT >= (SCREEN_HEIGHT - TAB_BAR_HEIGHT) + ENEMY_HEIGHT) {
+          if (enemy.y * SCREEN_HEIGHT >= (SCREEN_HEIGHT - tabBarHeight) + ENEMY_HEIGHT) {
             if (enemy.type === 'purple') {
               setPlayerHealth((h) => {
                 const newHealth = h - 1;
@@ -319,7 +320,7 @@ export default function GameScreen() {
       running = false;
       cancelAnimationFrame(animationFrameId);
     };
-  }, [gameOver]);
+  }, [gameOver, playerX, playerY, tabBarHeight]);
 
   // Game loop for bullets
   React.useEffect(() => {
