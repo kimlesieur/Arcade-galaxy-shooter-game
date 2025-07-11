@@ -1,42 +1,23 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
 
-interface Star {
-  x: Animated.SharedValue<number>;
-  y: Animated.SharedValue<number>;
-  speed: number;
-  size: number;
-}
-
-interface StarfieldProps {
+interface StarProps {
   width: number;
   height: number;
-  starCount?: number;
+  speed: number;
+  size: number;
 }
 
 const getRandom = (min: number, max: number) =>
   Math.random() * (max - min) + min;
 
-const Starfield: React.FC<StarfieldProps> = ({
-  width,
-  height,
-  starCount = 60,
-}) => {
-  // Create stars with random positions, speeds, and sizes
-  const stars = useRef<Star[]>(
-    Array.from({ length: starCount }).map(() => {
-      return {
-        x: useSharedValue(getRandom(0, width)),
-        y: useSharedValue(getRandom(0, height)),
-        speed: getRandom(30, 100), // pixels per second
-        size: getRandom(3, 6), // Increased min size for visibility
-      };
-    }),
-  ).current;
+const Star: React.FC<StarProps> = ({ width, height, speed, size }) => {
+  const x = useSharedValue(getRandom(0, width));
+  const y = useSharedValue(getRandom(0, height));
 
   useEffect(() => {
     let isMounted = true;
@@ -47,20 +28,51 @@ const Starfield: React.FC<StarfieldProps> = ({
       const now = Date.now();
       const delta = (now - lastTimestamp) / 1000; // seconds
       lastTimestamp = now;
-      stars.forEach((star) => {
-        star.y.value += star.speed * delta;
-        if (star.y.value > height) {
-          star.y.value = 0;
-          star.x.value = getRandom(0, width);
-        }
-      });
+      y.value += speed * delta;
+      if (y.value > height) {
+        y.value = 0;
+        x.value = getRandom(0, width);
+      }
       requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
     return () => {
       isMounted = false;
     };
-  }, [height, width, stars]);
+  }, [height, width, speed, x, y]);
+
+  const style = useAnimatedStyle(() => ({
+    position: 'absolute',
+    left: x.value,
+    top: y.value,
+    width: size,
+    height: size,
+    borderRadius: size / 2,
+    backgroundColor: 'white',
+    opacity: 0.7,
+  }));
+
+  return <Animated.View style={style} />;
+};
+
+interface StarfieldProps {
+  width: number;
+  height: number;
+  starCount?: number;
+}
+
+const Starfield: React.FC<StarfieldProps> = ({
+  width,
+  height,
+  starCount = 60,
+}) => {
+  // Precompute random speeds and sizes for each star for stable rendering
+  const stars = React.useMemo(() => {
+    return Array.from({ length: starCount }).map(() => ({
+      speed: getRandom(30, 100),
+      size: getRandom(3, 6),
+    }));
+  }, [starCount]);
 
   return (
     <View
@@ -74,19 +86,15 @@ const Starfield: React.FC<StarfieldProps> = ({
         },
       ]}
     >
-      {stars.map((star, i) => {
-        const style = useAnimatedStyle(() => ({
-          position: 'absolute',
-          left: star.x.value,
-          top: star.y.value,
-          width: star.size,
-          height: star.size,
-          borderRadius: star.size / 2,
-          backgroundColor: 'white',
-          opacity: 0.7,
-        }));
-        return <Animated.View key={i} style={style} />;
-      })}
+      {stars.map((star, i) => (
+        <Star
+          key={i}
+          width={width}
+          height={height}
+          speed={star.speed}
+          size={star.size}
+        />
+      ))}
     </View>
   );
 };
