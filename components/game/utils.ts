@@ -1,4 +1,5 @@
 import { Enemy } from './types';
+import { ENEMY_WIDTH, ENEMY_HEIGHT } from '../../utils/constants';
 
 export function checkCollision(
   x1: number,
@@ -45,10 +46,10 @@ export function spawnEnemyWave(
       case 'fast':
         enemy = {
           id: `enemy-${Date.now()}-${i}`,
-          x: (screenWidth / (enemyCount + 1)) * (i + 1) - 15,
+          x: (screenWidth / (enemyCount + 1)) * (i + 1) - ENEMY_WIDTH / 2,
           y: -30 - i * 50,
-          width: 25,
-          height: 25,
+          width: ENEMY_WIDTH,
+          height: ENEMY_HEIGHT,
           velocityX: (Math.random() - 0.5) * 100,
           velocityY: 120 + wave * 10,
           health: 1,
@@ -62,10 +63,10 @@ export function spawnEnemyWave(
       case 'tank':
         enemy = {
           id: `enemy-${Date.now()}-${i}`,
-          x: (screenWidth / (enemyCount + 1)) * (i + 1) - 20,
+          x: (screenWidth / (enemyCount + 1)) * (i + 1) - ENEMY_WIDTH / 2,
           y: -40 - i * 60,
-          width: 40,
-          height: 30,
+          width: ENEMY_WIDTH,
+          height: ENEMY_HEIGHT,
           velocityX: 0,
           velocityY: 60 + wave * 5,
           health: 3,
@@ -79,10 +80,10 @@ export function spawnEnemyWave(
       default: // basic
         enemy = {
           id: `enemy-${Date.now()}-${i}`,
-          x: (screenWidth / (enemyCount + 1)) * (i + 1) - 15,
+          x: (screenWidth / (enemyCount + 1)) * (i + 1) - ENEMY_WIDTH / 2,
           y: -30 - i * 40,
-          width: 30,
-          height: 20,
+          width: ENEMY_WIDTH,
+          height: ENEMY_HEIGHT,
           velocityX: 0,
           velocityY: 80 + wave * 8,
           health: 2,

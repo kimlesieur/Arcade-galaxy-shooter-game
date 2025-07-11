@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Group, Path, Skia, Rect, Circle, Image, useImage } from '@shopify/react-native-skia';
 import { EnemyShip, Bullet } from './types';
+import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../../utils/constants';
 
 interface MinimalGameRendererProps {
   playerX: number;
@@ -10,9 +11,6 @@ interface MinimalGameRendererProps {
   bullets: Bullet[];
   enemies: EnemyShip[];
 }
-
-const ENEMY_WIDTH = 30;
-const ENEMY_HEIGHT = 20;
 
 export default function GameRenderer({
   playerX,
@@ -74,10 +72,10 @@ export default function GameRenderer({
         {playerShipImage ? (
           <Image
             image={playerShipImage}
-            x={-20} // Center the image (assuming 40x40 image)
-            y={-20}
-            width={40}
-            height={40}
+            x={-PLAYER_WIDTH / 2} // Center the image
+            y={-PLAYER_HEIGHT / 2}
+            width={PLAYER_WIDTH}
+            height={PLAYER_HEIGHT}
           />
         ) : (
           <Path path={playerShipPath} color="#00ffff" />

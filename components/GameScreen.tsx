@@ -14,6 +14,7 @@ import { isOffScreen, checkCollision } from './game/utils';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../utils/constants';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -71,8 +72,6 @@ export default function GameScreen() {
 
   // Enemy state
   const [enemies, setEnemies] = useState<EnemyShip[]>([]);
-  const ENEMY_WIDTH = 30;
-  const ENEMY_HEIGHT = 20;
   const ENEMY_SPEED = 100;
   const ENEMY_SPAWN_INTERVAL = 1200;
   const spawnTimer = React.useRef(0);
@@ -274,8 +273,6 @@ export default function GameScreen() {
             }
             // Enemy-player collision (rectangle-rectangle)
             // Player ship: center at (playerX, playerY), size 40x40
-            const PLAYER_WIDTH = 40;
-            const PLAYER_HEIGHT = 40;
             if (
               checkCollision(
                 playerX - PLAYER_WIDTH / 2,
