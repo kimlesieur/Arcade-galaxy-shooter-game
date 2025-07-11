@@ -13,14 +13,13 @@ export default function TabLayout() {
         },
         tabBarActiveTintColor: '#00ffff',
         tabBarInactiveTintColor: '#666',
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Play',
-          tabBarIcon: ({ size, color }) => (
-            <Play size={size} color={color} />
-          ),
+          tabBarIcon: ({ size, color }) => <Play size={size} color={color} />,
         }}
       />
       <Tabs.Screen

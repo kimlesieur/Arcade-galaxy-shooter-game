@@ -34,8 +34,7 @@ export default function GameRenderer({
   }, []);
 
   // Enemy state
-  const [enemies, setEnemies] = useState<EnemyShip[]>([
-  ]);
+  const [enemies, setEnemies] = useState<EnemyShip[]>([]);
   const lastFrameTime = useRef<number | null>(null);
   const spawnTimer = useRef<number>(0);
 
@@ -56,19 +55,21 @@ export default function GameRenderer({
       spawnTimer.current += delta * 1000; // ms
 
       // Move and remove enemies
-      setEnemies(prev => {
-        let updated = prev.map(enemy => ({
+      setEnemies((prev) => {
+        let updated = prev.map((enemy) => ({
           ...enemy,
-          y: enemy.y + enemy.speed * delta / screenHeight,
+          y: enemy.y + (enemy.speed * delta) / screenHeight,
         }));
-        updated = updated.filter(enemy => (enemy.y * screenHeight) < (screenHeight + ENEMY_HEIGHT));
+        updated = updated.filter(
+          (enemy) => enemy.y * screenHeight < screenHeight + ENEMY_HEIGHT,
+        );
         return updated;
       });
 
       // Spawn new enemy if enough time has passed
       if (spawnTimer.current >= ENEMY_SPAWN_INTERVAL) {
         spawnTimer.current -= ENEMY_SPAWN_INTERVAL;
-        setEnemies(prev => [
+        setEnemies((prev) => [
           ...prev,
           {
             id: Math.random().toString(36).substr(2, 9),
@@ -91,7 +92,7 @@ export default function GameRenderer({
   return (
     <>
       {/* Render enemies */}
-      {enemies.map(enemy => (
+      {enemies.map((enemy) => (
         <Group
           key={enemy.id}
           transform={[
@@ -99,16 +100,17 @@ export default function GameRenderer({
             { translateY: enemy.y * screenHeight },
           ]}
         >
-          <Rect x={-ENEMY_WIDTH / 2} y={0} width={ENEMY_WIDTH} height={ENEMY_HEIGHT} color="#ff3333" />
+          <Rect
+            x={-ENEMY_WIDTH / 2}
+            y={0}
+            width={ENEMY_WIDTH}
+            height={ENEMY_HEIGHT}
+            color="#ff3333"
+          />
         </Group>
       ))}
       {/* Player ship */}
-      <Group
-        transform={[
-          { translateX: playerX },
-          { translateY: playerY },
-        ]}
-      >
+      <Group transform={[{ translateX: playerX }, { translateY: playerY }]}>
         <Path path={playerShipPath} color="#00ffff" />
       </Group>
     </>

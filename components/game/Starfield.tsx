@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, runOnJS } from 'react-native-reanimated';
+import { View, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 
 interface Star {
   x: Animated.SharedValue<number>;
@@ -15,9 +18,14 @@ interface StarfieldProps {
   starCount?: number;
 }
 
-const getRandom = (min: number, max: number) => Math.random() * (max - min) + min;
+const getRandom = (min: number, max: number) =>
+  Math.random() * (max - min) + min;
 
-const Starfield: React.FC<StarfieldProps> = ({ width, height, starCount = 60 }) => {
+const Starfield: React.FC<StarfieldProps> = ({
+  width,
+  height,
+  starCount = 60,
+}) => {
   // Create stars with random positions, speeds, and sizes
   const stars = useRef<Star[]>(
     Array.from({ length: starCount }).map(() => {
@@ -27,7 +35,7 @@ const Starfield: React.FC<StarfieldProps> = ({ width, height, starCount = 60 }) 
         speed: getRandom(30, 100), // pixels per second
         size: getRandom(3, 6), // Increased min size for visibility
       };
-    })
+    }),
   ).current;
 
   useEffect(() => {
@@ -39,7 +47,7 @@ const Starfield: React.FC<StarfieldProps> = ({ width, height, starCount = 60 }) 
       const now = Date.now();
       const delta = (now - lastTimestamp) / 1000; // seconds
       lastTimestamp = now;
-      stars.forEach(star => {
+      stars.forEach((star) => {
         star.y.value += star.speed * delta;
         if (star.y.value > height) {
           star.y.value = 0;
@@ -55,7 +63,17 @@ const Starfield: React.FC<StarfieldProps> = ({ width, height, starCount = 60 }) 
   }, [height, width, stars]);
 
   return (
-    <View style={[StyleSheet.absoluteFill, { width, height, zIndex: 0, backgroundColor: 'rgba(139, 116, 197, 0.2)' }]}> 
+    <View
+      style={[
+        StyleSheet.absoluteFill,
+        {
+          width,
+          height,
+          zIndex: 0,
+          backgroundColor: 'rgba(139, 116, 197, 0.2)',
+        },
+      ]}
+    >
       {stars.map((star, i) => {
         const style = useAnimatedStyle(() => ({
           position: 'absolute',
@@ -73,4 +91,4 @@ const Starfield: React.FC<StarfieldProps> = ({ width, height, starCount = 60 }) 
   );
 };
 
-export default Starfield; 
+export default Starfield;

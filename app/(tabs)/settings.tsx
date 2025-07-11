@@ -9,9 +9,9 @@ export default function SettingsTab() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Settings</Text>
-      
+
       <View style={styles.section}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.setting}
           onPress={() => setSoundEnabled(!soundEnabled)}
         >
@@ -24,13 +24,15 @@ export default function SettingsTab() {
           <View style={[styles.toggle, soundEnabled && styles.toggleActive]} />
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.setting}
           onPress={() => setVibrationEnabled(!vibrationEnabled)}
         >
-          <Zap size={24} color={vibrationEnabled ? "#00ffff" : "#666"} />
+          <Zap size={24} color={vibrationEnabled ? '#00ffff' : '#666'} />
           <Text style={styles.settingText}>Haptic Feedback</Text>
-          <View style={[styles.toggle, vibrationEnabled && styles.toggleActive]} />
+          <View
+            style={[styles.toggle, vibrationEnabled && styles.toggleActive]}
+          />
         </TouchableOpacity>
       </View>
 
