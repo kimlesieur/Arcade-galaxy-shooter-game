@@ -73,3 +73,10 @@ export interface Star {
   size: number;
   opacity: number;
 }
+
+export interface EnemyShip {
+  id: string;
+  x: number; // horizontal position (0-1, as a fraction of screen width)
+  y: number; // vertical position (0-1, as a fraction of screen height)
+  speed: number; // downward speed in units per second
+}

@@ -28,6 +28,8 @@ export default function GameScreen() {
             <GameRenderer
               playerX={playerX}
               playerY={playerY}
+              screenWidth={SCREEN_WIDTH}
+              screenHeight={SCREEN_HEIGHT}
             />
           </Canvas>
         </View>
