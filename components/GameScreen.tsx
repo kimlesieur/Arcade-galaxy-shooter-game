@@ -15,6 +15,7 @@ import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const TAB_BAR_HEIGHT = 56; // Adjust if your tab bar is a different height
 
 export default function GameScreen() {
   const [playerX, setPlayerX] = useState(SCREEN_WIDTH / 2);
@@ -184,7 +185,7 @@ export default function GameScreen() {
         }));
         // Remove enemies that are off screen, and handle purple enemy effect
         updated = updated.filter((enemy) => {
-          if (enemy.y * SCREEN_HEIGHT >= SCREEN_HEIGHT + ENEMY_HEIGHT) {
+          if (enemy.y * SCREEN_HEIGHT >= (SCREEN_HEIGHT - TAB_BAR_HEIGHT) + ENEMY_HEIGHT) {
             if (enemy.type === 'purple') {
               setPlayerHealth((h) => {
                 const newHealth = h - 1;
@@ -195,6 +196,8 @@ export default function GameScreen() {
               if (collisionSoundRef.current) {
                 collisionSoundRef.current.replayAsync();
               }
+              // Haptic feedback when purple enemy reaches the bottom
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             }
             return false; // remove enemy
           }
@@ -263,6 +266,8 @@ export default function GameScreen() {
                 newEnemies.splice(i, 1);
                 newBullets.splice(j, 1);
                 setScore((s) => s + (enemy.type === 'purple' ? 2 : 1));
+                // Haptic feedback on enemy destroyed
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 break;
               }
             }
@@ -288,7 +293,7 @@ export default function GameScreen() {
                }
               newEnemies.splice(i, 1);
               // Haptic feedback on collision
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
               // Play collision sound
               if (collisionSoundRef.current) {
                 collisionSoundRef.current.replayAsync();
