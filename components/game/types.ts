@@ -80,3 +80,5 @@ export interface EnemyShip {
   y: number; // vertical position (0-1, as a fraction of screen height)
   speed: number; // downward speed in units per second
 }
+
+export type Bullet = Projectile;
