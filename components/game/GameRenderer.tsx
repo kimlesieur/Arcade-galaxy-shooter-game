@@ -1,12 +1,13 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Group, Path, Skia, Rect } from '@shopify/react-native-skia';
-import { EnemyShip } from './types';
+import { Group, Path, Skia, Rect, Circle } from '@shopify/react-native-skia';
+import { EnemyShip, Bullet } from './types';
 
 interface MinimalGameRendererProps {
   playerX: number;
   playerY: number;
   screenWidth: number;
   screenHeight: number;
+  bullets: Bullet[];
 }
 
 const ENEMY_WIDTH = 30;
@@ -19,6 +20,7 @@ export default function GameRenderer({
   playerY,
   screenWidth,
   screenHeight,
+  bullets,
 }: MinimalGameRendererProps) {
   // Create player ship path
   const playerShipPath = useMemo(() => {
@@ -108,6 +110,16 @@ export default function GameRenderer({
             color="#ff3333"
           />
         </Group>
+      ))}
+      {/* Render bullets */}
+      {bullets.map((bullet) => (
+        <Circle
+          key={bullet.id}
+          cx={bullet.x}
+          cy={bullet.y}
+          r={bullet.radius}
+          color="#ffff00"
+        />
       ))}
       {/* Player ship */}
       <Group transform={[{ translateX: playerX }, { translateY: playerY }]}>
