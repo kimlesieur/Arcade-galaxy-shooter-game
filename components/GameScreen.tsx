@@ -18,17 +18,24 @@ export default function GameScreen() {
   const [playerX, setPlayerX] = useState(SCREEN_WIDTH / 2);
   const playerY = SCREEN_HEIGHT - 180;
 
+  // Ref to always have latest player position
+  const playerPosRef = React.useRef({ x: playerX, y: playerY });
+  React.useEffect(() => {
+    playerPosRef.current.x = playerX;
+    playerPosRef.current.y = playerY;
+  }, [playerX, playerY]);
+
   // Bullet state
   const [bullets, setBullets] = useState<Bullet[]>([]);
 
-  // Shoot bullet function
+  // Shoot bullet function (now uses ref for position)
   const shootBullet = () => {
     setBullets((prev) => [
       ...prev,
       {
         id: Math.random().toString(36).substr(2, 9),
-        x: playerX,
-        y: playerY - 30, // just above the ship
+        x: playerPosRef.current.x,
+        y: playerPosRef.current.y - 30, // just above the ship
         velocityX: 0,
         velocityY: -500, // pixels per second, upward
         isPlayer: true,
@@ -38,13 +45,13 @@ export default function GameScreen() {
     ]);
   };
 
-  // Automatic shooting effect
+  // Automatic shooting effect (no playerX/playerY in deps)
   React.useEffect(() => {
     const interval = setInterval(() => {
       shootBullet();
     }, 200); // fire every 200ms
     return () => clearInterval(interval);
-  }, [playerX, playerY]);
+  }, []);
 
   // Game loop for bullets
   React.useEffect(() => {
