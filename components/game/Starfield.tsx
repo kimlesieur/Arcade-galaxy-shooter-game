@@ -3,7 +3,7 @@ import { View, StyleSheet, Dimensions } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, runOnJS } from 'react-native-reanimated';
 
 interface Star {
-  x: number;
+  x: Animated.SharedValue<number>;
   y: Animated.SharedValue<number>;
   speed: number;
   size: number;
@@ -22,7 +22,7 @@ const Starfield: React.FC<StarfieldProps> = ({ width, height, starCount = 60 }) 
   const stars = useRef<Star[]>(
     Array.from({ length: starCount }).map(() => {
       return {
-        x: getRandom(0, width),
+        x: useSharedValue(getRandom(0, width)),
         y: useSharedValue(getRandom(0, height)),
         speed: getRandom(30, 100), // pixels per second
         size: getRandom(3, 6), // Increased min size for visibility
@@ -43,7 +43,7 @@ const Starfield: React.FC<StarfieldProps> = ({ width, height, starCount = 60 }) 
         star.y.value += star.speed * delta;
         if (star.y.value > height) {
           star.y.value = 0;
-          star.x = getRandom(0, width);
+          star.x.value = getRandom(0, width);
         }
       });
       requestAnimationFrame(animate);
@@ -59,7 +59,7 @@ const Starfield: React.FC<StarfieldProps> = ({ width, height, starCount = 60 }) 
       {stars.map((star, i) => {
         const style = useAnimatedStyle(() => ({
           position: 'absolute',
-          left: star.x,
+          left: star.x.value,
           top: star.y.value,
           width: star.size,
           height: star.size,
