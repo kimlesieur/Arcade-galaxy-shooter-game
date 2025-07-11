@@ -52,6 +52,10 @@ export default function GameScreen() {
         radius: 6,
       },
     ]);
+    // Play shoot sound
+    if (shootSoundRef.current) {
+      shootSoundRef.current.replayAsync();
+    }
   };
 
   // Automatic shooting effect (no playerX/playerY in deps)
@@ -74,12 +78,44 @@ export default function GameScreen() {
   // Track purple enemy count
   const purpleEnemyCountRef = React.useRef(0);
 
-  // Audio state for background music
+  // Audio state for background music and sound effects
   const soundRef = React.useRef<Audio.Sound | null>(null);
+  const shootSoundRef = React.useRef<Audio.Sound | null>(null);
+  const collisionSoundRef = React.useRef<Audio.Sound | null>(null);
+
+  // Preload sound effects on mount
+  React.useEffect(() => {
+    async function loadEffects() {
+      if (!shootSoundRef.current) {
+        const { sound } = await Audio.Sound.createAsync(
+          require('../assets/sounds/shoot.wav'),
+          { isLooping: false, volume: 0.7 }
+        );
+        shootSoundRef.current = sound;
+      }
+      if (!collisionSoundRef.current) {
+        const { sound } = await Audio.Sound.createAsync(
+          require('../assets/sounds/collision.wav'),
+          { isLooping: false, volume: 0.7 }
+        );
+        collisionSoundRef.current = sound;
+      }
+    }
+    loadEffects();
+    return () => {
+      if (shootSoundRef.current) {
+        shootSoundRef.current.unloadAsync();
+        shootSoundRef.current = null;
+      }
+      if (collisionSoundRef.current) {
+        collisionSoundRef.current.unloadAsync();
+        collisionSoundRef.current = null;
+      }
+    };
+  }, []);
 
   // Play background music when game starts, stop when game over
   React.useEffect(() => {
-    let isMounted = true;
     async function playMusic() {
       if (soundRef.current) {
         await soundRef.current.unloadAsync();
@@ -87,7 +123,7 @@ export default function GameScreen() {
       }
       const { sound } = await Audio.Sound.createAsync(
         require('../assets/sounds/theme_2.wav'),
-        { shouldPlay: true, isLooping: true, volume: 0.5 }
+        { shouldPlay: true, isLooping: true, volume: 0.2 }
       );
       soundRef.current = sound;
       await sound.playAsync();
@@ -100,7 +136,6 @@ export default function GameScreen() {
       }
     }
     return () => {
-      isMounted = false;
       if (soundRef.current) {
         soundRef.current.unloadAsync();
         soundRef.current = null;
@@ -156,7 +191,10 @@ export default function GameScreen() {
                 if (newHealth <= 0) setGameOver(true);
                 return newHealth;
               });
-              purpleEnemyCountRef.current = Math.max(0, purpleEnemyCountRef.current - 1);
+              // Play collision sound when purple enemy hits the bottom
+              if (collisionSoundRef.current) {
+                collisionSoundRef.current.replayAsync();
+              }
             }
             return false; // remove enemy
           }
@@ -251,6 +289,10 @@ export default function GameScreen() {
               newEnemies.splice(i, 1);
               // Haptic feedback on collision
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              // Play collision sound
+              if (collisionSoundRef.current) {
+                collisionSoundRef.current.replayAsync();
+              }
               setPlayerHealth((h) => {
                 const newHealth = h - 1;
                 if (newHealth <= 0) setGameOver(true);
