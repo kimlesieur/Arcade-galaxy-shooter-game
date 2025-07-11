@@ -43,9 +43,8 @@
 - Detect collisions between player bullets and enemy ships
 - Remove hit enemies and increment the score
 
-### 6. Enemy Shooting & Player Health
-- Make enemies shoot bullets downward
-- Detect collisions with the player and reduce health
+### 6. Player Health
+- Detect collisions between ennemies and player + reduce health when it happens
 
 ### 7. Game Over & Restart
 - End the game when the player's health reaches zero
@@ -55,3 +54,15 @@
 - Add explosion animations
 - Add sound effects
 - Polish UI elements
+
+
+## Extra 
+### A. Add power-ups
+- Create bonus elements that player can catch
+- These bonus adds power to his ship for some limited time (it changes the fired ammo munition type : missiles, ...)
+
+### B. Enemy Shooting & Player Health
+- Make enemies shoot bullets downward
+- Detect collisions with the player and reduce health
+
+
