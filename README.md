@@ -52,6 +52,7 @@
 
 ### 8. Visual & Audio Effects
 - Add explosion animations
+- Add haptic feedback on player collisions
 - Add sound effects
 - Polish UI elements
 

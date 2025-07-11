@@ -52,7 +52,7 @@ export default function GameRenderer({
             y={0}
             width={ENEMY_WIDTH}
             height={ENEMY_HEIGHT}
-            color="#ff3333"
+            color={enemy.color}
           />
         </Group>
       ))}
