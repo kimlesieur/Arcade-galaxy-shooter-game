@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Dimensions, Text } from 'react-native';
+import { View, StyleSheet, Dimensions, Text, TouchableOpacity } from 'react-native';
 import { Canvas } from '@shopify/react-native-skia';
 import {
   GestureHandlerRootView,
@@ -25,6 +25,13 @@ export default function GameScreen() {
     playerPosRef.current.y = playerY;
   }, [playerX, playerY]);
 
+  // Score state
+  const [score, setScore] = useState(0);
+  // Player health state
+  const [playerHealth, setPlayerHealth] = useState(3); // Start with 3 health
+  // Game over state
+  const [gameOver, setGameOver] = useState(false);
+
   // Bullet state
   const [bullets, setBullets] = useState<Bullet[]>([]);
 
@@ -47,11 +54,12 @@ export default function GameScreen() {
 
   // Automatic shooting effect (no playerX/playerY in deps)
   React.useEffect(() => {
+    if (gameOver) return;
     const interval = setInterval(() => {
       shootBullet();
     }, 700); // fire every 700ms
     return () => clearInterval(interval);
-  }, []);
+  }, [gameOver]);
 
   // Enemy state
   const [enemies, setEnemies] = useState<EnemyShip[]>([]);
@@ -64,15 +72,22 @@ export default function GameScreen() {
   // Track purple enemy count
   const purpleEnemyCountRef = React.useRef(0);
 
-  // Score state
-  const [score, setScore] = useState(0);
-  // Player health state
-  const [playerHealth, setPlayerHealth] = useState(3); // Start with 3 health
-  // Game over state
-  const [gameOver, setGameOver] = useState(false);
+  // Add a restart handler
+  const handleRestart = () => {
+    setScore(0);
+    setPlayerHealth(3);
+    setGameOver(false);
+    setPlayerX(SCREEN_WIDTH / 2);
+    setBullets([]);
+    setEnemies([]);
+    purpleEnemyCountRef.current = 0;
+    spawnTimer.current = 0;
+    lastFrameTime.current = null;
+  };
 
   // Game loop for enemies and collision
   React.useEffect(() => {
+    if (gameOver) return;
     let animationFrameId: number;
     let running = true;
     const loop = (timestamp: number) => {
@@ -215,10 +230,11 @@ export default function GameScreen() {
       running = false;
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [gameOver]);
 
   // Game loop for bullets
   React.useEffect(() => {
+    if (gameOver) return;
     let animationFrameId: number;
     let lastTime: number | null = null;
     const loop = (time: number) => {
@@ -238,7 +254,7 @@ export default function GameScreen() {
     };
     animationFrameId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animationFrameId);
-  }, []);
+  }, [gameOver]);
 
   // Pan gesture for moving the player ship
   const panGesture = Gesture.Pan().onUpdate((event) => {
@@ -283,7 +299,18 @@ export default function GameScreen() {
               }}>
                 <Text style={{ color: '#fff', fontSize: 40, fontWeight: 'bold', marginBottom: 20 }}>Game Over</Text>
                 <Text style={{ color: '#fff', fontSize: 24, marginBottom: 40 }}>Score: {score}</Text>
-                {/* Optionally, add a restart button here */}
+                <TouchableOpacity
+                  onPress={handleRestart}
+                  style={{
+                    backgroundColor: '#fff',
+                    paddingVertical: 14,
+                    paddingHorizontal: 40,
+                    borderRadius: 8,
+                    marginBottom: 10,
+                  }}
+                >
+                  <Text style={{ color: '#0a0a23', fontSize: 22, fontWeight: 'bold' }}>Restart</Text>
+                </TouchableOpacity>
               </View>
             )}
             <Canvas style={{ flex: 1 }}>
