@@ -15,6 +15,7 @@ import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../utils/constants';
+import LottieView from 'lottie-react-native';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -39,6 +40,8 @@ export default function GameScreen() {
 
   // Bullet state
   const [bullets, setBullets] = useState<Bullet[]>([]);
+  // explosions state now includes type
+  const [explosions, setExplosions] = useState<{ id: string; x: number; y: number; type: 'red' | 'purple' }[]>([]);
 
   // Shoot bullet function (now uses ref for position)
   const shootBullet = () => {
@@ -266,6 +269,7 @@ export default function GameScreen() {
                 newEnemies.splice(i, 1);
                 newBullets.splice(j, 1);
                 setScore((s) => s + (enemy.type === 'purple' ? 2 : 1));
+                setExplosions((prev) => [...prev, { id: enemy.id, x: enemyX, y: enemyY, type: enemy.type }]);
                 // Haptic feedback on enemy destroyed
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 break;
@@ -343,6 +347,11 @@ export default function GameScreen() {
     return () => cancelAnimationFrame(animationFrameId);
   }, [gameOver]);
 
+  // Remove explosion after animation completes
+  const handleExplosionFinish = (id: string) => {
+    setExplosions((prev) => prev.filter((e) => e.id !== id));
+  };
+
   // Pan gesture for moving the player ship
   const panGesture = Gesture.Pan().onUpdate((event) => {
     const newX = Math.max(30, Math.min(SCREEN_WIDTH - 30, event.absoluteX));
@@ -410,6 +419,29 @@ export default function GameScreen() {
                 enemies={enemies}
               />
             </Canvas>
+            {/* Explosion Lottie overlays */}
+            {explosions.map((explosion) => (
+              <LottieView
+                key={explosion.id}
+                source={
+                  explosion.type === 'purple'
+                    ? require('../assets/images/explosions/explosion_purple_lottie.json')
+                    : require('../assets/images/explosions/explosion_lottie.json')
+                }
+                autoPlay
+                loop={false}
+                style={{
+                  position: 'absolute',
+                  left: explosion.x - 30,
+                  top: explosion.y - 10,
+                  width: 60,
+                  height: 60,
+                  pointerEvents: 'none',
+                  zIndex: 50,
+                }}
+                onAnimationFinish={() => handleExplosionFinish(explosion.id)}
+              />
+            ))}
           </View>
         </View>
       </GestureDetector>
