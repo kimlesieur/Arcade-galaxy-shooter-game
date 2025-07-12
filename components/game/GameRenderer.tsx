@@ -12,7 +12,7 @@ interface MinimalGameRendererProps {
   enemies: EnemyShip[];
 }
 
-export default function GameRenderer({
+function GameRenderer({
   playerX,
   playerY,
   screenWidth,
@@ -84,3 +84,7 @@ export default function GameRenderer({
     </>
   );
 }
+
+// Wrap GameRenderer with React.memo for performance
+const MemoizedGameRenderer = React.memo(GameRenderer);
+export default MemoizedGameRenderer;
