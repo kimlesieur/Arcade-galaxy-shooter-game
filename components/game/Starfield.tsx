@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { StyleSheet } from 'react-native';
 import { Canvas, Circle } from '@shopify/react-native-skia';
-import { useSharedValue, useDerivedValue, withRepeat, withTiming, useAnimatedReaction, runOnJS } from 'react-native-reanimated';
 
 interface StarfieldProps {
   width: number;
@@ -18,51 +17,61 @@ interface Star {
   size: number;
 }
 
+const generateStar = (width: number, height: number): Star => ({
+  x: getRandom(0, width),
+  y: getRandom(0, height),
+  speed: getRandom(30, 100),
+  size: getRandom(3, 6),
+});
+
 const generateStars = (count: number, width: number, height: number): Star[] => {
-  return Array.from({ length: count }).map(() => ({
-    x: getRandom(0, width),
-    y: getRandom(0, height),
-    speed: getRandom(30, 100),
-    size: getRandom(3, 6),
-  }));
+  return Array.from({ length: count }).map(() => generateStar(width, height));
 };
 
 const Starfield: React.FC<StarfieldProps> = ({ width, height, starCount = 60 }) => {
-  // Memoize stars so they don't change on every render
-  const stars = React.useMemo(() => generateStars(starCount, width, height), [starCount, width, height]);
+  const [stars, setStars] = React.useState<Star[]>(() => generateStars(starCount, width, height));
+  const animationRef = useRef<number | null>(null);
+  const lastTimestamp = useRef<number>(0);
 
-  // Shared value for time offset
-  const time = useSharedValue(0);
-
-  // Animate time value to loop
+  // Update stars per frame
   useEffect(() => {
-    time.value = withRepeat(withTiming(height, { duration: 8000 }), -1, false);
-  }, [height, time]);
+    let running = true;
+    function animate(now: number) {
+      if (!running) return;
+      const delta = lastTimestamp.current ? (now - lastTimestamp.current) / 1000 : 0;
+      lastTimestamp.current = now;
+      setStars(prevStars =>
+        prevStars.map(star => {
+          const newY = star.y + star.speed * delta;
+          if (newY > height) {
+            // Respawn at the top with new random x, speed, and size
+            return {
+              x: getRandom(0, width),
+              y: 0,
+              speed: getRandom(30, 100),
+              size: getRandom(3, 6),
+            };
+          }
+          return { ...star, y: newY };
+        })
+      );
+      animationRef.current = requestAnimationFrame(animate);
+    }
+    animationRef.current = requestAnimationFrame(animate);
+    return () => {
+      running = false;
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, [width, height]);
 
-  // Derived value for animated stars
-  const animatedStars = useDerivedValue(() => {
-    return stars.map(star => {
-      // Move star down by (speed / 100) * time.value, wrap around height
-      const newY = (star.y + (star.speed / 100) * time.value) % height;
-      return { ...star, y: newY };
-    });
-  }, [time, stars, height]);
-
-  // Mirror animatedStars.value to React state
-  const [starsState, setStarsState] = React.useState<Star[]>(stars);
-  useAnimatedReaction(
-    () => animatedStars.value,
-    (current, prev) => {
-      if (current !== prev) {
-        runOnJS(setStarsState)(current);
-      }
-    },
-    [animatedStars]
-  );
+  // Regenerate stars if width/height/starCount changes
+  useEffect(() => {
+    setStars(generateStars(starCount, width, height));
+  }, [starCount, width, height]);
 
   return (
     <Canvas style={[StyleSheet.absoluteFill, { width, height, zIndex: 0 }]}> 
-      {starsState.map((star: Star, i: number) => (
+      {stars.map((star: Star, i: number) => (
         <Circle
           key={i}
           cx={star.x}
