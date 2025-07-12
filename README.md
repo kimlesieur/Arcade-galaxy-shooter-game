@@ -64,8 +64,7 @@
 - Create bonus elements that player can catch
 - These bonus adds power to his ship for some limited time (it changes the fired ammo munition type : missiles, ...)
 
-### B. Enemy Shooting & Player Health
+### B. Enemy Shooting
 - Make enemies shoot bullets downward
-- Detect collisions with the player and reduce health
 
 
