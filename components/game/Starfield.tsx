@@ -1,59 +1,7 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
-
-interface StarProps {
-  width: number;
-  height: number;
-  speed: number;
-  size: number;
-}
-
-const getRandom = (min: number, max: number) =>
-  Math.random() * (max - min) + min;
-
-const Star: React.FC<StarProps> = ({ width, height, speed, size }) => {
-  const x = useSharedValue(getRandom(0, width));
-  const y = useSharedValue(getRandom(0, height));
-
-  useEffect(() => {
-    let isMounted = true;
-    let lastTimestamp = Date.now();
-
-    const animate = () => {
-      if (!isMounted) return;
-      const now = Date.now();
-      const delta = (now - lastTimestamp) / 1000; // seconds
-      lastTimestamp = now;
-      y.value += speed * delta;
-      if (y.value > height) {
-        y.value = 0;
-        x.value = getRandom(0, width);
-      }
-      requestAnimationFrame(animate);
-    };
-    requestAnimationFrame(animate);
-    return () => {
-      isMounted = false;
-    };
-  }, [height, width, speed, x, y]);
-
-  const style = useAnimatedStyle(() => ({
-    position: 'absolute',
-    left: x.value,
-    top: y.value,
-    width: size,
-    height: size,
-    borderRadius: size / 2,
-    backgroundColor: 'white',
-    opacity: 0.7,
-  }));
-
-  return <Animated.View style={style} />;
-};
+import { StyleSheet } from 'react-native';
+import { Canvas, Circle } from '@shopify/react-native-skia';
+import { useSharedValue, useDerivedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
 interface StarfieldProps {
   width: number;
@@ -61,41 +9,58 @@ interface StarfieldProps {
   starCount?: number;
 }
 
-const Starfield: React.FC<StarfieldProps> = ({
-  width,
-  height,
-  starCount = 60,
-}) => {
-  // Precompute random speeds and sizes for each star for stable rendering
-  const stars = React.useMemo(() => {
-    return Array.from({ length: starCount }).map(() => ({
-      speed: getRandom(30, 100),
-      size: getRandom(3, 6),
-    }));
-  }, [starCount]);
+const getRandom = (min: number, max: number) => Math.random() * (max - min) + min;
+
+interface Star {
+  x: number;
+  y: number;
+  speed: number;
+  size: number;
+}
+
+const generateStars = (count: number, width: number, height: number): Star[] => {
+  return Array.from({ length: count }).map(() => ({
+    x: getRandom(0, width),
+    y: getRandom(0, height),
+    speed: getRandom(30, 100),
+    size: getRandom(3, 6),
+  }));
+};
+
+const Starfield: React.FC<StarfieldProps> = ({ width, height, starCount = 60 }) => {
+  // Memoize stars so they don't change on every render
+  const stars = React.useMemo(() => generateStars(starCount, width, height), [starCount, width, height]);
+
+  // Shared value for time offset
+  const time = useSharedValue(0);
+
+  // Animate time value to loop
+  useEffect(() => {
+    time.value = withRepeat(withTiming(height, { duration: 8000 }), -1, false);
+  }, [height, time]);
+
+  // Derived value for animated stars
+  const animatedStars = useDerivedValue(() => {
+    return stars.map(star => {
+      // Move star down by (speed / 100) * time.value, wrap around height
+      const newY = (star.y + (star.speed / 100) * time.value) % height;
+      return { ...star, y: newY };
+    });
+  }, [time, stars, height]);
 
   return (
-    <View
-      style={[
-        StyleSheet.absoluteFill,
-        {
-          width,
-          height,
-          zIndex: 0,
-          backgroundColor: 'rgba(139, 116, 197, 0.2)',
-        },
-      ]}
-    >
-      {stars.map((star, i) => (
-        <Star
+    <Canvas style={[StyleSheet.absoluteFill, { width, height, zIndex: 0 }]}> 
+      {animatedStars.value.map((star: Star, i: number) => (
+        <Circle
           key={i}
-          width={width}
-          height={height}
-          speed={star.speed}
-          size={star.size}
+          cx={star.x}
+          cy={star.y}
+          r={star.size / 2}
+          color="white"
+          opacity={0.7}
         />
       ))}
-    </View>
+    </Canvas>
   );
 };
 
