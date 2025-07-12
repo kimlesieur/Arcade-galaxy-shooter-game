@@ -15,7 +15,7 @@ import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../utils/constants';
-import LottieView from 'lottie-react-native';
+import ExplosionParticles from './game/ExplosionParticles';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -419,7 +419,17 @@ export default function GameScreen() {
                 enemies={enemies}
               />
             </Canvas>
-            {/* Explosion Lottie overlays */}
+            {/* Explosion overlays: Skia-based particles */}
+            {explosions.map((explosion) => (
+              <ExplosionParticles
+                key={explosion.id}
+                x={explosion.x}
+                y={explosion.y}
+                type={explosion.type}
+                onFinish={() => handleExplosionFinish(explosion.id)}
+              />
+            ))}
+            {/*
             {explosions.map((explosion) => (
               <LottieView
                 key={explosion.id}
@@ -442,6 +452,7 @@ export default function GameScreen() {
                 onAnimationFinish={() => handleExplosionFinish(explosion.id)}
               />
             ))}
+            */}
           </View>
         </View>
       </GestureDetector>
