@@ -1,6 +1,7 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Group, Path, Skia, Rect, Circle } from '@shopify/react-native-skia';
+import React, { useMemo } from 'react';
+import { Group, Path, Skia, Rect, Circle, Image, useImage } from '@shopify/react-native-skia';
 import { EnemyShip, Bullet } from './types';
+import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../../utils/constants';
 
 interface MinimalGameRendererProps {
   playerX: number;
@@ -8,12 +9,8 @@ interface MinimalGameRendererProps {
   screenWidth: number;
   screenHeight: number;
   bullets: Bullet[];
+  enemies: EnemyShip[];
 }
-
-const ENEMY_WIDTH = 30;
-const ENEMY_HEIGHT = 20;
-const ENEMY_SPEED = 100; // pixels per second
-const ENEMY_SPAWN_INTERVAL = 1200; // ms
 
 export default function GameRenderer({
   playerX,
@@ -21,8 +18,12 @@ export default function GameRenderer({
   screenWidth,
   screenHeight,
   bullets,
+  enemies,
 }: MinimalGameRendererProps) {
-  // Create player ship path
+  // Load the player ship image
+  const playerShipImage = useImage(require('../../assets/images/player_ship.png'));
+
+  // Create player ship path (fallback if image fails to load)
   const playerShipPath = useMemo(() => {
     const path = Skia.Path.Make();
     path.moveTo(0, 0);
@@ -35,62 +36,7 @@ export default function GameRenderer({
     return path;
   }, []);
 
-  // Enemy state
-  const [enemies, setEnemies] = useState<EnemyShip[]>([]);
-  const lastFrameTime = useRef<number | null>(null);
-  const spawnTimer = useRef<number>(0);
-
-  // Game loop
-  useEffect(() => {
-    let animationFrameId: number;
-    let running = true;
-
-    const loop = (timestamp: number) => {
-      if (!running) return;
-      if (lastFrameTime.current === null) {
-        lastFrameTime.current = timestamp;
-        animationFrameId = requestAnimationFrame(loop);
-        return;
-      }
-      const delta = (timestamp - lastFrameTime.current) / 1000; // seconds
-      lastFrameTime.current = timestamp;
-      spawnTimer.current += delta * 1000; // ms
-
-      // Move and remove enemies
-      setEnemies((prev) => {
-        let updated = prev.map((enemy) => ({
-          ...enemy,
-          y: enemy.y + (enemy.speed * delta) / screenHeight,
-        }));
-        updated = updated.filter(
-          (enemy) => enemy.y * screenHeight < screenHeight + ENEMY_HEIGHT,
-        );
-        return updated;
-      });
-
-      // Spawn new enemy if enough time has passed
-      if (spawnTimer.current >= ENEMY_SPAWN_INTERVAL) {
-        spawnTimer.current -= ENEMY_SPAWN_INTERVAL;
-        setEnemies((prev) => [
-          ...prev,
-          {
-            id: Math.random().toString(36).substr(2, 9),
-            x: Math.random(),
-            y: 0,
-            speed: ENEMY_SPEED,
-          },
-        ]);
-      }
-
-      animationFrameId = requestAnimationFrame(loop);
-    };
-    animationFrameId = requestAnimationFrame(loop);
-    return () => {
-      running = false;
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [screenHeight]);
-
+  // Only render, no local enemy state or game loop
   return (
     <>
       {/* Render enemies */}
@@ -107,7 +53,7 @@ export default function GameRenderer({
             y={0}
             width={ENEMY_WIDTH}
             height={ENEMY_HEIGHT}
-            color="#ff3333"
+            color={enemy.color}
           />
         </Group>
       ))}
@@ -123,7 +69,17 @@ export default function GameRenderer({
       ))}
       {/* Player ship */}
       <Group transform={[{ translateX: playerX }, { translateY: playerY }]}>
-        <Path path={playerShipPath} color="#00ffff" />
+        {playerShipImage ? (
+          <Image
+            image={playerShipImage}
+            x={-PLAYER_WIDTH / 2} // Center the image
+            y={-PLAYER_HEIGHT / 2}
+            width={PLAYER_WIDTH}
+            height={PLAYER_HEIGHT}
+          />
+        ) : (
+          <Path path={playerShipPath} color="#00ffff" />
+        )}
       </Group>
     </>
   );

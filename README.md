@@ -50,9 +50,12 @@
 - End the game when the player's health reaches zero
 - Show a game over screen and allow restarting
 
-### 8. Visual & Audio Effects
-- Add explosion animations
+### 8. Audio Effects
+- Add haptic feedback on player collisions
 - Add sound effects
+
+### 9. Visual Effects
+- Add explosion animations
 - Polish UI elements
 
 
@@ -61,8 +64,7 @@
 - Create bonus elements that player can catch
 - These bonus adds power to his ship for some limited time (it changes the fired ammo munition type : missiles, ...)
 
-### B. Enemy Shooting & Player Health
+### B. Enemy Shooting
 - Make enemies shoot bullets downward
-- Detect collisions with the player and reduce health
 
 
