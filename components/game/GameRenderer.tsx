@@ -12,6 +12,38 @@ interface MinimalGameRendererProps {
   enemies: EnemyShip[];
 }
 
+function renderEnemies(enemies: EnemyShip[], screenWidth: number, screenHeight: number) {
+  return enemies.map((enemy) => (
+    <Group
+      key={enemy.id}
+      transform={[
+        { translateX: enemy.x * screenWidth },
+        { translateY: enemy.y * screenHeight },
+      ]}
+    >
+      <Rect
+        x={-ENEMY_WIDTH / 2}
+        y={0}
+        width={ENEMY_WIDTH}
+        height={ENEMY_HEIGHT}
+        color={enemy.color}
+      />
+    </Group>
+  ));
+}
+
+function renderBullets(bullets: Bullet[]) {
+  return bullets.map((bullet) => (
+    <Circle
+      key={bullet.id}
+      cx={bullet.x}
+      cy={bullet.y}
+      r={bullet.radius}
+      color="#ffff00"
+    />
+  ));
+}
+
 function GameRenderer({
   playerX,
   playerY,
@@ -36,37 +68,25 @@ function GameRenderer({
     return path;
   }, []);
 
+  // Memoize enemy rendering
+  const enemyElements = useMemo(
+    () => renderEnemies(enemies, screenWidth, screenHeight),
+    [enemies, screenWidth, screenHeight]
+  );
+
+  // Memoize bullet rendering
+  const bulletElements = useMemo(
+    () => renderBullets(bullets),
+    [bullets]
+  );
+
   // Only render, no local enemy state or game loop
   return (
     <>
       {/* Render enemies */}
-      {enemies.map((enemy) => (
-        <Group
-          key={enemy.id}
-          transform={[
-            { translateX: enemy.x * screenWidth },
-            { translateY: enemy.y * screenHeight },
-          ]}
-        >
-          <Rect
-            x={-ENEMY_WIDTH / 2}
-            y={0}
-            width={ENEMY_WIDTH}
-            height={ENEMY_HEIGHT}
-            color={enemy.color}
-          />
-        </Group>
-      ))}
+      {enemyElements}
       {/* Render bullets */}
-      {bullets.map((bullet) => (
-        <Circle
-          key={bullet.id}
-          cx={bullet.x}
-          cy={bullet.y}
-          r={bullet.radius}
-          color="#ffff00"
-        />
-      ))}
+      {bulletElements}
       {/* Player ship */}
       <Group transform={[{ translateX: playerX }, { translateY: playerY }]}>
         {playerShipImage ? (
