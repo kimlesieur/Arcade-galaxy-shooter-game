@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { Canvas, Circle } from '@shopify/react-native-skia';
-import { useSharedValue, useDerivedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import { useSharedValue, useDerivedValue, withRepeat, withTiming, useAnimatedReaction, runOnJS } from 'react-native-reanimated';
 
 interface StarfieldProps {
   width: number;
@@ -48,9 +48,21 @@ const Starfield: React.FC<StarfieldProps> = ({ width, height, starCount = 60 }) 
     });
   }, [time, stars, height]);
 
+  // Mirror animatedStars.value to React state
+  const [starsState, setStarsState] = React.useState<Star[]>(stars);
+  useAnimatedReaction(
+    () => animatedStars.value,
+    (current, prev) => {
+      if (current !== prev) {
+        runOnJS(setStarsState)(current);
+      }
+    },
+    [animatedStars]
+  );
+
   return (
     <Canvas style={[StyleSheet.absoluteFill, { width, height, zIndex: 0 }]}> 
-      {animatedStars.value.map((star: Star, i: number) => (
+      {starsState.map((star: Star, i: number) => (
         <Circle
           key={i}
           cx={star.x}
