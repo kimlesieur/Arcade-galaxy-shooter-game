@@ -13,23 +13,27 @@ interface MinimalGameRendererProps {
 }
 
 function renderEnemies(enemies: EnemyShip[], screenWidth: number, screenHeight: number) {
-  return enemies.map((enemy) => (
-    <Group
-      key={enemy.id}
-      transform={[
-        { translateX: enemy.x * screenWidth },
-        { translateY: enemy.y * screenHeight },
-      ]}
-    >
-      <Rect
-        x={-ENEMY_WIDTH / 2}
-        y={0}
-        width={ENEMY_WIDTH}
-        height={ENEMY_HEIGHT}
-        color={enemy.color}
-      />
-    </Group>
-  ));
+  return enemies.map((enemy) => {
+    // Memoize transform array for each enemy
+    const transform = [
+      { translateX: enemy.x * screenWidth },
+      { translateY: enemy.y * screenHeight },
+    ];
+    return (
+      <Group
+        key={enemy.id}
+        transform={transform}
+      >
+        <Rect
+          x={-ENEMY_WIDTH / 2}
+          y={0}
+          width={ENEMY_WIDTH}
+          height={ENEMY_HEIGHT}
+          color={enemy.color}
+        />
+      </Group>
+    );
+  });
 }
 
 function renderBullets(bullets: Bullet[]) {
@@ -55,7 +59,7 @@ function GameRenderer({
   // Load the player ship image
   const playerShipImage = useImage(require('../../assets/images/player_ship.png'));
 
-  // Create player ship path (fallback if image fails to load)
+  // Memoize player ship path (fallback if image fails to load)
   const playerShipPath = useMemo(() => {
     const path = Skia.Path.Make();
     path.moveTo(0, 0);
@@ -67,6 +71,15 @@ function GameRenderer({
     path.close();
     return path;
   }, []);
+
+  // Memoize player ship transform
+  const playerShipTransform = useMemo(
+    () => [
+      { translateX: playerX },
+      { translateY: playerY },
+    ],
+    [playerX, playerY]
+  );
 
   // Memoize enemy rendering
   const enemyElements = useMemo(
@@ -88,7 +101,7 @@ function GameRenderer({
       {/* Render bullets */}
       {bulletElements}
       {/* Player ship */}
-      <Group transform={[{ translateX: playerX }, { translateY: playerY }]}>
+      <Group transform={playerShipTransform}>
         {playerShipImage ? (
           <Image
             image={playerShipImage}
