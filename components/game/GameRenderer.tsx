@@ -10,6 +10,9 @@ interface MinimalGameRendererProps {
   screenHeight: number;
   bullets: Bullet[];
   enemies: EnemyShip[];
+  isSpecialMissileCharging?: boolean;
+  specialMissileChargeProgress?: number;
+  triggerSpecialFireEffect?: boolean;
 }
 
 function renderEnemies(enemies: EnemyShip[], screenWidth: number, screenHeight: number) {
@@ -51,6 +54,79 @@ function renderBullets(bullets: Bullet[]) {
   });
 }
 
+function renderPlayerHalo(
+  playerX: number, 
+  playerY: number, 
+  isCharging: boolean, 
+  chargeProgress: number
+) {
+  if (!isCharging) return null;
+  
+  const baseRadius = Math.max(PLAYER_WIDTH, PLAYER_HEIGHT) / 2;
+  const haloRadius = baseRadius + (chargeProgress * 30); // Grow up to 30px larger
+  const opacity = 0.3 + (chargeProgress * 0.4); // 0.3 to 0.7 opacity
+  
+  return (
+    <Circle
+      cx={playerX}
+      cy={playerY}
+      r={haloRadius}
+      color={`rgba(255, 107, 53, ${opacity})`}
+      style="fill"
+    />
+  );
+}
+
+function renderSpecialFireEffect(
+  playerX: number, 
+  playerY: number, 
+  triggerEffect: boolean
+) {
+  if (!triggerEffect) return null;
+  
+  // Create multiple expanding circles for the fire effect
+  const effects = [];
+  const baseRadius = Math.max(PLAYER_WIDTH, PLAYER_HEIGHT) / 2;
+  
+  // Inner bright core
+  effects.push(
+    <Circle
+      key="fire-effect-core"
+      cx={playerX}
+      cy={playerY}
+      r={baseRadius + 5}
+      color="rgba(255, 255, 255, 0.8)"
+      style="fill"
+    />
+  );
+  
+  // Middle orange layer
+  effects.push(
+    <Circle
+      key="fire-effect-middle"
+      cx={playerX}
+      cy={playerY}
+      r={baseRadius + 15}
+      color="rgba(255, 107, 53, 0.7)"
+      style="fill"
+    />
+  );
+  
+  // Outer glow
+  effects.push(
+    <Circle
+      key="fire-effect-outer"
+      cx={playerX}
+      cy={playerY}
+      r={baseRadius + 25}
+      color="rgba(255, 107, 53, 0.3)"
+      style="fill"
+    />
+  );
+  
+  return <>{effects}</>;
+}
+
 function GameRenderer({
   playerX,
   playerY,
@@ -58,6 +134,9 @@ function GameRenderer({
   screenHeight,
   bullets,
   enemies,
+  isSpecialMissileCharging = false,
+  specialMissileChargeProgress = 0,
+  triggerSpecialFireEffect = false,
 }: MinimalGameRendererProps) {
   // Load the player ship image
   const playerShipImage = useImage(require('../../assets/images/player_ship.png'));
@@ -103,6 +182,13 @@ function GameRenderer({
       {enemyElements}
       {/* Render bullets */}
       {bulletElements}
+      
+      {/* Render special fire effect (behind player) */}
+      {renderSpecialFireEffect(playerX, playerY, triggerSpecialFireEffect)}
+      
+      {/* Render player halo (behind player) */}
+      {renderPlayerHalo(playerX, playerY, isSpecialMissileCharging, specialMissileChargeProgress)}
+      
       {/* Player ship */}
       <Group transform={playerShipTransform}>
         {playerShipImage ? (

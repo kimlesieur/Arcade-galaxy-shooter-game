@@ -38,6 +38,10 @@ export default function GameScreen() {
   const [playerHealth, setPlayerHealth] = useState(3); // Start with 3 health
   // Game over state
   const [gameOver, setGameOver] = useState(false);
+  // Special missile charging state
+  const [isSpecialMissileCharging, setIsSpecialMissileCharging] = useState(false);
+  const [specialMissileChargeProgress, setSpecialMissileChargeProgress] = useState(0);
+  const [triggerSpecialFireEffect, setTriggerSpecialFireEffect] = useState(false);
 
   // Bullet state
   const [bullets, setBullets] = useState<Bullet[]>([]);
@@ -92,12 +96,12 @@ export default function GameScreen() {
 
   // Automatic shooting effect (no playerX/playerY in deps)
   React.useEffect(() => {
-    if (gameOver) return;
+    if (gameOver || isSpecialMissileCharging) return;
     const interval = setInterval(() => {
       shootBullet();
     }, 700); // fire every 700ms
     return () => clearInterval(interval);
-  }, [gameOver]);
+  }, [gameOver, isSpecialMissileCharging]);
 
   // Enemy state
   const [enemies, setEnemies] = useState<EnemyShip[]>([]);
@@ -193,6 +197,9 @@ export default function GameScreen() {
     setPlayerX(SCREEN_WIDTH / 2);
     setBullets([]);
     setEnemies([]);
+    setIsSpecialMissileCharging(false);
+    setSpecialMissileChargeProgress(0);
+    setTriggerSpecialFireEffect(false);
     purpleEnemyCountRef.current = 0;
     spawnTimer.current = 0;
     lastFrameTime.current = null;
@@ -455,6 +462,9 @@ export default function GameScreen() {
                 screenHeight={SCREEN_HEIGHT}
                 bullets={bullets}
                 enemies={enemies}
+                isSpecialMissileCharging={isSpecialMissileCharging}
+                specialMissileChargeProgress={specialMissileChargeProgress}
+                triggerSpecialFireEffect={triggerSpecialFireEffect}
               />
             </Canvas>
             {/* Explosion overlays: Skia-based particles */}
@@ -471,6 +481,13 @@ export default function GameScreen() {
             {/* Special Missile Button */}
             <SpecialMissileButton
               onSpecialMissileReady={shootSpecialMissile}
+              onChargingStart={() => setIsSpecialMissileCharging(true)}
+              onChargingEnd={() => setIsSpecialMissileCharging(false)}
+              onChargeProgress={setSpecialMissileChargeProgress}
+              onSpecialMissileFired={() => {
+                setTriggerSpecialFireEffect(true);
+                setTimeout(() => setTriggerSpecialFireEffect(false), 500);
+              }}
               disabled={gameOver}
             />
             {/*
