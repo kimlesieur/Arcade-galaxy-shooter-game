@@ -39,6 +39,7 @@ export interface Projectile {
   isPlayer: boolean;
   damage: number;
   radius: number;
+  type?: 'normal' | 'special'; // Add type to distinguish special missiles
 }
 
 export interface Explosion {

@@ -13,16 +13,17 @@ import { Bullet, EnemyShip } from './game/types';
 import { isOffScreen, checkCollision } from './game/utils';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+
 import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../utils/constants';
 import ExplosionParticles from './game/ExplosionParticles';
+import SpecialMissileButton from './SpecialMissileButton';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function GameScreen() {
   const [playerX, setPlayerX] = useState(SCREEN_WIDTH / 2);
   const playerY = SCREEN_HEIGHT - 180;
-  const tabBarHeight = useBottomTabBarHeight();
+
 
   // Ref to always have latest player position
   const playerPosRef = React.useRef({ x: playerX, y: playerY });
@@ -56,12 +57,37 @@ export default function GameScreen() {
         isPlayer: true,
         damage: 1,
         radius: 6,
+        type: 'normal',
       },
     ]);
     // Play shoot sound
     if (shootSoundRef.current) {
       shootSoundRef.current.replayAsync();
     }
+  };
+
+  // Shoot special missile function
+  const shootSpecialMissile = () => {
+    setBullets((prev) => [
+      ...prev,
+      {
+        id: Math.random().toString(36).substr(2, 9),
+        x: playerPosRef.current.x,
+        y: playerPosRef.current.y - 30, // just above the ship
+        velocityX: 0,
+        velocityY: -600, // faster than regular bullets
+        isPlayer: true,
+        damage: 3, // more damage than regular bullets
+        radius: 10, // larger than regular bullets
+        type: 'special',
+      },
+    ]);
+    // Play special missile sound
+    if (specialMissileSoundRef.current) {
+      specialMissileSoundRef.current.replayAsync();
+    }
+    // Haptic feedback for special missile
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   };
 
   // Automatic shooting effect (no playerX/playerY in deps)
@@ -86,6 +112,7 @@ export default function GameScreen() {
   const soundRef = React.useRef<Audio.Sound | null>(null);
   const shootSoundRef = React.useRef<Audio.Sound | null>(null);
   const collisionSoundRef = React.useRef<Audio.Sound | null>(null);
+  const specialMissileSoundRef = React.useRef<Audio.Sound | null>(null);
 
   // Preload sound effects on mount
   React.useEffect(() => {
@@ -104,6 +131,13 @@ export default function GameScreen() {
         );
         collisionSoundRef.current = sound;
       }
+      if (!specialMissileSoundRef.current) {
+        const { sound } = await Audio.Sound.createAsync(
+          require('../assets/sounds/shoot.wav'), // Using same sound for now
+          { isLooping: false, volume: 1.0 }
+        );
+        specialMissileSoundRef.current = sound;
+      }
     }
     loadEffects();
     return () => {
@@ -114,6 +148,10 @@ export default function GameScreen() {
       if (collisionSoundRef.current) {
         collisionSoundRef.current.unloadAsync();
         collisionSoundRef.current = null;
+      }
+      if (specialMissileSoundRef.current) {
+        specialMissileSoundRef.current.unloadAsync();
+        specialMissileSoundRef.current = null;
       }
     };
   }, []);
@@ -188,7 +226,7 @@ export default function GameScreen() {
         }));
         // Remove enemies that are off screen, and handle purple enemy effect
         updated = updated.filter((enemy) => {
-          if (enemy.y * SCREEN_HEIGHT >= (SCREEN_HEIGHT - tabBarHeight) + ENEMY_HEIGHT) {
+          if (enemy.y * SCREEN_HEIGHT >= SCREEN_HEIGHT + ENEMY_HEIGHT) {
             if (enemy.type === 'purple') {
               setPlayerHealth((h) => {
                 const newHealth = h - 1;
@@ -321,7 +359,7 @@ export default function GameScreen() {
       running = false;
       cancelAnimationFrame(animationFrameId);
     };
-  }, [gameOver, playerX, playerY, tabBarHeight]);
+  }, [gameOver, playerX, playerY]);
 
   // Game loop for bullets
   React.useEffect(() => {
@@ -429,6 +467,12 @@ export default function GameScreen() {
                 onFinish={() => handleExplosionFinish(explosion.id)}
               />
             ))}
+            
+            {/* Special Missile Button */}
+            <SpecialMissileButton
+              onSpecialMissileReady={shootSpecialMissile}
+              disabled={gameOver}
+            />
             {/*
             {explosions.map((explosion) => (
               <LottieView

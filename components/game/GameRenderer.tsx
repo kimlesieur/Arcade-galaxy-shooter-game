@@ -37,15 +37,18 @@ function renderEnemies(enemies: EnemyShip[], screenWidth: number, screenHeight: 
 }
 
 function renderBullets(bullets: Bullet[]) {
-  return bullets.map((bullet) => (
-    <Circle
-      key={bullet.id}
-      cx={bullet.x}
-      cy={bullet.y}
-      r={bullet.radius}
-      color="#ffff00"
-    />
-  ));
+  return bullets.map((bullet) => {
+    const isSpecial = bullet.type === 'special';
+    return (
+      <Circle
+        key={bullet.id}
+        cx={bullet.x}
+        cy={bullet.y}
+        r={bullet.radius}
+        color={isSpecial ? "#ff6b35" : "#ffff00"}
+      />
+    );
+  });
 }
 
 function GameRenderer({
