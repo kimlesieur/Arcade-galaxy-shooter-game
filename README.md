@@ -67,4 +67,63 @@
 ### B. Enemy Shooting
 - Make enemies shoot bullets downward
 
+# Features
 
+## Special Missile Feature
+The special missile feature adds an interactive button to the bottom-right corner of the game screen that allows players to fire powerful special missiles.
+
+### How It Works
+
+#### Button Interaction
+- **Long Press**: Hold down the special missile button to start charging
+- **Circular Progress**: A circular progress bar fills around the button as it charges
+- **Visual Feedback**: 
+  - Button glows orange while charging
+  - Button turns green when fully charged
+  - Progress bar shows charging status
+- **Haptic Feedback**: 
+  - Light vibration when charging starts
+  - Medium vibration when charging is cancelled
+  - Success vibration when fully charged
+  - Heavy vibration when special missile is fired
+
+#### Special Missile Properties
+- **Damage**: 3x damage compared to regular bullets (3 vs 1)
+- **Speed**: 20% faster than regular bullets (600 vs 500 pixels/second)
+- **Size**: Larger radius than regular bullets (10 vs 6 pixels)
+- **Color**: Orange (#ff6b35) instead of yellow
+- **Sound**: Louder sound effect when fired
+
+### Technical Implementation
+
+##### Components
+1. **SpecialMissileButton.tsx**: Main button component with circular progress
+2. **GameScreen.tsx**: Integration with game logic
+3. **GameRenderer.tsx**: Visual rendering of special missiles
+4. **types.ts**: Extended bullet type definitions
+
+#### Key Features
+- **Gesture Handling**: Uses react-native-gesture-handler for long press detection
+- **Skia Graphics**: Circular progress bar rendered with Skia
+- **State Management**: Proper cleanup and state management for charging
+- **Audio Integration**: Special sound effects for the feature
+- **Haptic Feedback**: Multiple haptic feedback points for better UX
+
+#### Charging Mechanics
+- **Charge Time**: 2 seconds to fully charge
+- **Progress Updates**: 50ms intervals for smooth visual feedback
+- **Auto-Trigger**: Automatically fires when fully charged
+- **Cancellation**: Releasing before full charge cancels the action
+
+## Usage
+1. Long press the special missile button (bottom-right corner)
+2. Hold until the circular progress bar fills completely
+3. The special missile will automatically fire
+4. The button resets and can be used again
+
+## Future Enhancements
+- Cooldown period between uses
+- Multiple special missile types
+- Power-up system integration
+- Visual effects for special missile trails
+- Different charging times based on game difficulty 
