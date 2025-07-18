@@ -19,7 +19,6 @@ interface SpecialMissileButtonProps {
   onChargingStart?: () => void;
   onChargingEnd?: () => void;
   onChargeProgress?: (progress: number) => void;
-  onSpecialMissileFired?: () => void;
   disabled?: boolean;
 }
 
@@ -28,7 +27,6 @@ export default function SpecialMissileButton({
   onChargingStart,
   onChargingEnd,
   onChargeProgress,
-  onSpecialMissileFired,
   disabled = false 
 }: SpecialMissileButtonProps) {
   const [isCharging, setIsCharging] = useState(false);
@@ -131,11 +129,6 @@ export default function SpecialMissileButton({
     
     // Trigger special missile
     onSpecialMissileReady();
-
-    // Notify parent component that special missile has fired
-    if (onSpecialMissileFired) {
-      onSpecialMissileFired();
-    }
     
     // Reset after a short delay
     setTimeout(() => {

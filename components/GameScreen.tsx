@@ -86,9 +86,6 @@ export default function GameScreen() {
             onChargingStart={() => setIsSpecialMissileCharging(true)}
             onChargingEnd={() => setIsSpecialMissileCharging(false)}
             onChargeProgress={setSpecialMissileChargeProgress}
-            onSpecialMissileFired={() => {
-              // This is handled by the shootSpecialMissile function now
-            }}
             disabled={gameOver}
           />
         </View>
