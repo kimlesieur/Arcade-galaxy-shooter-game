@@ -8,15 +8,15 @@ import {
 } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import GameRenderer from './game/GameRenderer';
-import Starfield from './game/Starfield';
+import Starfield from './background/Starfield';
 import { Bullet, EnemyShip } from './game/types';
 import { isOffScreen, checkCollision } from './game/utils';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 
 import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../utils/constants';
-import ExplosionParticles from './game/ExplosionParticles';
-import SpecialMissileButton from './SpecialMissileButton';
+import ExplosionParticles from './effects/ExplosionParticles';
+import SpecialMissileButton from './interface/SpecialMissileButton';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
