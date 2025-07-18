@@ -43,28 +43,133 @@ function renderBullets(bullets: Bullet[]) {
   return bullets.map((bullet) => {
     const isSpecial = bullet.type === 'special';
     if (isSpecial) {
-      const time = Date.now() * 0.01;
-      const pulseScale = 1 + Math.sin(time * 8) * 0.2;
-      const sizeMultiplier = 2.0; // Keep it simple
-
-      const hue1 = (time * 50) % 360;
-      const hue2 = (time * 30 + 180) % 360;
+      // Spectacular special missile with multiple effects
+      const time = Date.now() * 0.01; // For animation
+      const pulseScale = 1 + Math.sin(time * 8) * 0.2; // Pulsing effect
+      const trailLength = 12; // Number of trail particles
+      const sizeMultiplier = 3.0; // 100% bigger effects (double size)
+      
+      // Color cycling effect
+      const hue1 = (time * 50) % 360; // Fast cycling
+      const hue2 = (time * 30 + 180) % 360; // Slower cycling, offset
 
       return (
         <Group key={bullet.id}>
-          {/* Simple outer glow */}
-          <Circle cx={bullet.x} cy={bullet.y} r={bullet.radius * 2 * sizeMultiplier} color={`hsla(${hue1}, 100%, 50%, 0.3)`} style="fill" />
-          {/* Pulsing ring */}
-          <Circle cx={bullet.x} cy={bullet.y} r={bullet.radius * 1.5 * pulseScale * sizeMultiplier} color={`hsla(${hue2}, 100%, 60%, 0.5)`} style="fill" />
-          {/* Inner core */}
-          <Circle cx={bullet.x} cy={bullet.y} r={bullet.radius * sizeMultiplier} color="rgba(255, 255, 255, 0.8)" style="fill" />
+          {/* Long animated trail particles */}
+          {Array.from({ length: trailLength }).map((_, index) => {
+            const trailOffset = index * 4;
+            const trailOpacity = (trailLength - index) / trailLength * 0.8;
+            const trailScale = (1 - (index / trailLength) * 0.7) * sizeMultiplier;
+            const trailHue = (hue1 + index * 10) % 360;
+            
+            return (
+              <Circle
+                key={`trail-${index}`}
+                cx={bullet.x}
+                cy={bullet.y + trailOffset}
+                r={bullet.radius * trailScale}
+                color={`hsla(${trailHue}, 100%, 70%, ${trailOpacity})`}
+                style="fill"
+              />
+            );
+          })}
+          
+          {/* Outer energy field */}
+          <Circle
+            cx={bullet.x}
+            cy={bullet.y}
+            r={bullet.radius * 3 * sizeMultiplier}
+            color={`hsla(${hue1}, 100%, 50%, 0.15)`}
+            style="fill"
+          />
+          
+          {/* Pulsing outer ring */}
+          <Circle
+            cx={bullet.x}
+            cy={bullet.y}
+            r={bullet.radius * 2.5 * pulseScale * sizeMultiplier}
+            color={`hsla(${hue2}, 100%, 60%, 0.3)`}
+            style="fill"
+          />
+          
+          {/* Middle energy ring */}
+          <Circle
+            cx={bullet.x}
+            cy={bullet.y}
+            r={bullet.radius * 2 * sizeMultiplier}
+            color={`hsla(${hue1}, 100%, 70%, 0.5)`}
+            style="fill"
+          />
+          
+          {/* Inner core glow */}
+          <Circle
+            cx={bullet.x}
+            cy={bullet.y}
+            r={bullet.radius * 1.5 * sizeMultiplier}
+            color="rgba(255, 255, 255, 0.8)"
+            style="fill"
+          />
+          
           {/* Bright center */}
-          <Circle cx={bullet.x} cy={bullet.y} r={bullet.radius * 0.5 * sizeMultiplier} color="rgba(255, 255, 255, 1)" style="fill" />
+          <Circle
+            cx={bullet.x}
+            cy={bullet.y}
+            r={bullet.radius * 0.8 * sizeMultiplier}
+            color="rgba(255, 255, 255, 1)"
+            style="fill"
+          />
+          
+          {/* Rotating energy particles */}
+          {Array.from({ length: 8 }).map((_, index) => {
+            const angle = (index / 8) * Math.PI * 2 + time * 3;
+            const particleX = bullet.x + Math.cos(angle) * bullet.radius * 2.2 * sizeMultiplier;
+            const particleY = bullet.y + Math.sin(angle) * bullet.radius * 2.2 * sizeMultiplier;
+            const particleOpacity = 0.6 + Math.sin(time * 6 + index) * 0.4;
+            const particleHue = (hue1 + index * 45) % 360;
+            
+            return (
+              <Circle
+                key={`particle-${index}`}
+                cx={particleX}
+                cy={particleY}
+                r={3 * sizeMultiplier}
+                color={`hsla(${particleHue}, 100%, 70%, ${particleOpacity})`}
+                style="fill"
+              />
+            );
+          })}
+          
+          {/* Inner rotating particles */}
+          {Array.from({ length: 4 }).map((_, index) => {
+            const angle = (index / 4) * Math.PI * 2 + time * 4;
+            const particleX = bullet.x + Math.cos(angle) * bullet.radius * 1.2 * sizeMultiplier;
+            const particleY = bullet.y + Math.sin(angle) * bullet.radius * 1.2 * sizeMultiplier;
+            const particleOpacity = 0.8 + Math.sin(time * 8 + index) * 0.2;
+            
+            return (
+              <Circle
+                key={`inner-particle-${index}`}
+                cx={particleX}
+                cy={particleY}
+                r={2 * sizeMultiplier}
+                color={`rgba(255, 255, 255, ${particleOpacity})`}
+                style="fill"
+              />
+            );
+          })}
         </Group>
       );
     }
     // Regular bullet (unchanged)
-    return (<Circle key={bullet.id} cx={bullet.x} cy={bullet.y} r={bullet.radius} color="#ffff00" />);
+    return (
+      <Circle
+        key={bullet.id}
+        cx={bullet.x}
+        cy={bullet.y}
+        r={bullet.radius}
+        color="#ffff00"
+      />
+    );
   });
 }
 
