@@ -284,78 +284,117 @@ export default function GameScreen() {
       }
 
       // Collision detection and scoring
-      setEnemies((prevEnemies) => {
-        const newEnemies = [...prevEnemies];
-        setBullets((prevBullets) => {
-          const newBullets = [...prevBullets];
-          for (let i = newEnemies.length - 1; i >= 0; i--) {
-            const enemy = newEnemies[i];
-            const enemyX = enemy.x * SCREEN_WIDTH;
-            const enemyY = enemy.y * SCREEN_HEIGHT;
-            // Bullet-enemy collision
-            for (let j = newBullets.length - 1; j >= 0; j--) {
-              const bullet = newBullets[j];
-              if (
-                checkCollision(
-                  bullet.x - bullet.radius,
-                  bullet.y - bullet.radius,
-                  bullet.radius * 2,
-                  bullet.radius * 2,
-                  enemyX - ENEMY_WIDTH / 2,
-                  enemyY,
-                  ENEMY_WIDTH,
-                  ENEMY_HEIGHT
-                )
-              ) {
-                // Remove enemy and bullet
-                if (enemy.type === 'purple') {
-                  purpleEnemyCountRef.current = Math.max(0, purpleEnemyCountRef.current - 1);
-                }
-                newEnemies.splice(i, 1);
-                newBullets.splice(j, 1);
-                setScore((s) => s + (enemy.type === 'purple' ? 2 : 1));
-                setExplosions((prev) => [...prev, { id: enemy.id, x: enemyX, y: enemyY, type: enemy.type }]);
-                // Haptic feedback on enemy destroyed
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                break;
-              }
-            }
-            // Enemy-player collision (rectangle-rectangle)
-            // Player ship: center at (playerX, playerY), size 40x40
-            if (
-              checkCollision(
-                playerX - PLAYER_WIDTH / 2,
-                playerY - PLAYER_HEIGHT / 2,
-                PLAYER_WIDTH,
-                PLAYER_HEIGHT,
+      setBullets((prevBullets) => {
+        const newBullets = [...prevBullets];
+        
+        setEnemies((prevEnemies) => {
+          const newEnemies = [...prevEnemies];
+          
+          // Process bullets
+          for (let j = newBullets.length - 1; j >= 0; j--) {
+            const bullet = newBullets[j];
+            const isSpecialMissile = bullet.type === 'special';
+            let bulletDestroyed = false;
+            
+            // Check collision with all enemies
+            for (let i = newEnemies.length - 1; i >= 0; i--) {
+              const enemy = newEnemies[i];
+              const enemyX = enemy.x * SCREEN_WIDTH;
+              const enemyY = enemy.y * SCREEN_HEIGHT;
+              
+              // Regular collision detection for all bullets
+              const collisionDetected = checkCollision(
+                bullet.x - bullet.radius,
+                bullet.y - bullet.radius,
+                bullet.radius * 2,
+                bullet.radius * 2,
                 enemyX - ENEMY_WIDTH / 2,
                 enemyY,
                 ENEMY_WIDTH,
                 ENEMY_HEIGHT
-              )
-            ) {
-              // Remove enemy and decrement health
-               if (enemy.type === 'purple') {
-                 purpleEnemyCountRef.current = Math.max(0, purpleEnemyCountRef.current - 1);
-               }
-              newEnemies.splice(i, 1);
-              // Haptic feedback on collision
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
-              // Play collision sound
-              if (collisionSoundRef.current) {
-                collisionSoundRef.current.replayAsync();
+              );
+              
+              if (collisionDetected) {
+                // Remove enemy
+                if (enemy.type === 'purple') {
+                  purpleEnemyCountRef.current = Math.max(0, purpleEnemyCountRef.current - 1);
+                }
+                newEnemies.splice(i, 1);
+                
+                // Scoring
+                if (isSpecialMissile) {
+                  setScore((s) => s + (enemy.type === 'purple' ? 5 : 3));
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                } else {
+                  setScore((s) => s + (enemy.type === 'purple' ? 2 : 1));
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                }
+                
+                // Create explosion
+                setExplosions((prev) => [...prev, { id: `${enemy.id}-${Date.now()}-${Math.random()}`, x: enemyX, y: enemyY, type: enemy.type }]);
+                
+                // For regular bullets, destroy the bullet and break
+                if (!isSpecialMissile) {
+                  newBullets.splice(j, 1);
+                  bulletDestroyed = true;
+                  break;
+                }
+                // For special missiles, continue checking other enemies
               }
-              setPlayerHealth((h) => {
-                const newHealth = h - 1;
-                if (newHealth <= 0) setGameOver(true);
-                return newHealth;
-              });
-              // Only one collision per enemy per frame
-              continue;
+            }
+            
+            // Remove special missile if it was destroyed
+            if (isSpecialMissile && bulletDestroyed) {
+              newBullets.splice(j, 1);
             }
           }
-          return newBullets;
+          
+          return newEnemies;
         });
+        
+        return newBullets;
+      });
+      
+      // Enemy-player collision detection
+      setEnemies((prevEnemies) => {
+        const newEnemies = [...prevEnemies];
+        for (let i = newEnemies.length - 1; i >= 0; i--) {
+          const enemy = newEnemies[i];
+          const enemyX = enemy.x * SCREEN_WIDTH;
+          const enemyY = enemy.y * SCREEN_HEIGHT;
+          
+          // Enemy-player collision (rectangle-rectangle)
+          // Player ship: center at (playerX, playerY), size 40x40
+          if (
+            checkCollision(
+              playerX - PLAYER_WIDTH / 2,
+              playerY - PLAYER_HEIGHT / 2,
+              PLAYER_WIDTH,
+              PLAYER_HEIGHT,
+              enemyX - ENEMY_WIDTH / 2,
+              enemyY,
+              ENEMY_WIDTH,
+              ENEMY_HEIGHT
+            )
+          ) {
+            // Remove enemy and decrement health
+            if (enemy.type === 'purple') {
+              purpleEnemyCountRef.current = Math.max(0, purpleEnemyCountRef.current - 1);
+            }
+            newEnemies.splice(i, 1);
+            // Haptic feedback on collision
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
+            // Play collision sound
+            if (collisionSoundRef.current) {
+              collisionSoundRef.current.replayAsync();
+            }
+            setPlayerHealth((h) => {
+              const newHealth = h - 1;
+              if (newHealth <= 0) setGameOver(true);
+              return newHealth;
+            });
+          }
+        }
         return newEnemies;
       });
 

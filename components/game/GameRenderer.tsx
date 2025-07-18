@@ -42,15 +42,29 @@ function renderEnemies(enemies: EnemyShip[], screenWidth: number, screenHeight: 
 function renderBullets(bullets: Bullet[]) {
   return bullets.map((bullet) => {
     const isSpecial = bullet.type === 'special';
-    return (
-      <Circle
-        key={bullet.id}
-        cx={bullet.x}
-        cy={bullet.y}
-        r={bullet.radius}
-        color={isSpecial ? "#ff6b35" : "#ffff00"}
-      />
-    );
+    if (isSpecial) {
+      const time = Date.now() * 0.01;
+      const pulseScale = 1 + Math.sin(time * 8) * 0.2;
+      const sizeMultiplier = 2.0; // Keep it simple
+
+      const hue1 = (time * 50) % 360;
+      const hue2 = (time * 30 + 180) % 360;
+
+      return (
+        <Group key={bullet.id}>
+          {/* Simple outer glow */}
+          <Circle cx={bullet.x} cy={bullet.y} r={bullet.radius * 2 * sizeMultiplier} color={`hsla(${hue1}, 100%, 50%, 0.3)`} style="fill" />
+          {/* Pulsing ring */}
+          <Circle cx={bullet.x} cy={bullet.y} r={bullet.radius * 1.5 * pulseScale * sizeMultiplier} color={`hsla(${hue2}, 100%, 60%, 0.5)`} style="fill" />
+          {/* Inner core */}
+          <Circle cx={bullet.x} cy={bullet.y} r={bullet.radius * sizeMultiplier} color="rgba(255, 255, 255, 0.8)" style="fill" />
+          {/* Bright center */}
+          <Circle cx={bullet.x} cy={bullet.y} r={bullet.radius * 0.5 * sizeMultiplier} color="rgba(255, 255, 255, 1)" style="fill" />
+        </Group>
+      );
+    }
+    // Regular bullet (unchanged)
+    return (<Circle key={bullet.id} cx={bullet.x} cy={bullet.y} r={bullet.radius} color="#ffff00" />);
   });
 }
 
