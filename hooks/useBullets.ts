@@ -59,7 +59,7 @@ export const useBullets = (
       shootBullet();
     }, 700);
     return () => clearInterval(interval);
-  }, [gameOver, isSpecialMissileCharging]);
+  }, [gameOver, isSpecialMissileCharging, playShootSound]);
 
   // Game loop for bullets
   useEffect(() => {

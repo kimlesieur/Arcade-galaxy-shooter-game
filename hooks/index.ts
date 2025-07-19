@@ -1,4 +1,3 @@
-export { useAudio } from './useAudio';
 export { useBullets } from './useBullets';
 export { useEnemies } from './useEnemies';
 export { useCollisionDetection } from './useCollisionDetection';

@@ -12,7 +12,6 @@ The `GameScreen.tsx` component has been refactored to separate concerns into cus
 - **`useGameLogic.ts`** - Main orchestrator hook that combines all other hooks
 
 #### Game Systems
-- **`useAudio.ts`** - Handles all audio functionality (background music, sound effects)
 - **`useBullets.ts`** - Manages bullet state, movement, and shooting logic
 - **`useEnemies.ts`** - Handles enemy spawning, movement, and lifecycle
 - **`useCollisionDetection.ts`** - Manages collision detection between game objects
@@ -23,6 +22,7 @@ The `GameScreen.tsx` component has been refactored to separate concerns into cus
 #### State Management
 - **`SettingsStore.ts`** - Manages game settings (sound, music, bullet state)
 - **`GameLogicStore.ts`** - Manages core game state and special missile system
+- **`AudioStore.ts`** - Manages all audio functionality (background music, sound effects)
 
 ### Components (`components/interface/`)
 
@@ -94,12 +94,13 @@ export default function GameScreen() {
 You can also use the stores directly if you need more granular control:
 
 ```tsx
-import { useGameLogicStore } from '../stores/GameLogicStore';
-import { useAudio, useBullets } from '../hooks';
+import { useGameLogicStore, useAudioStore, useSettingsStore } from '../stores';
+import { useBullets } from '../hooks';
 
 function CustomGameComponent() {
   const { playerX, playerY, score, gameOver } = useGameLogicStore();
-  const { playShootSound } = useAudio(gameOver);
+  const { playShootSound } = useAudioStore();
+  const { isSoundOn } = useSettingsStore();
   const { bullets, shootBullet } = useBullets(gameOver, false, playerPosRef, playShootSound, () => {});
   
   // Custom logic here
@@ -122,7 +123,7 @@ function CustomGameComponent() {
 - All game mechanics work exactly the same
 - The refactoring is purely structural - no behavioral changes
 - All existing imports and dependencies remain the same
-- Game state and special missile functionality are now managed directly through the GameLogicStore
+- Game state, special missile functionality, and audio are now managed directly through their respective stores
 
 ## Future Improvements
 

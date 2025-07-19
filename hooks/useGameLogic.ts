@@ -1,9 +1,10 @@
-import { useRef, useEffect } from 'react';
-import { useAudio } from './useAudio';
+import { useRef, useEffect, useCallback } from 'react';
 import { useBullets } from './useBullets';
 import { useEnemies } from './useEnemies';
 import { useCollisionDetection } from './useCollisionDetection';
 import { useGameLogicStore } from '../stores/GameLogicStore';
+import { useAudioStore } from '../stores/AudioStore';
+import { useSettingsStore } from '../stores/SettingsStore';
 import { useExplosions } from './useExplosions';
 
 export const useGameLogic = () => {
@@ -28,6 +29,21 @@ export const useGameLogic = () => {
     triggerFireEffect,
   } = useGameLogicStore();
 
+  // Get audio state and actions
+  const { isSoundOn, isMusicOn } = useSettingsStore();
+  const {
+    isLoaded,
+    isMusicPlaying,
+    loadAudio,
+    unloadAudio,
+    playBackgroundMusic,
+    stopBackgroundMusic,
+    restartBackgroundMusic,
+    playShootSound: playShootSoundFromStore,
+    playCollisionSound: playCollisionSoundFromStore,
+    playSpecialMissileSound: playSpecialMissileSoundFromStore,
+  } = useAudioStore();
+
   // Ref to always have latest player position
   const playerPosRef = useRef({ x: playerX, y: playerY });
   
@@ -36,13 +52,51 @@ export const useGameLogic = () => {
     playerPosRef.current.y = playerY;
   }, [playerX, playerY]);
 
-  // Audio management
-  const {
-    playShootSound,
-    playCollisionSound,
-    playSpecialMissileSound,
-    restartMusic,
-  } = useAudio(gameOver);
+  // Load audio on mount
+  useEffect(() => {
+    loadAudio();
+    
+    return () => {
+      unloadAudio();
+    };
+  }, [loadAudio, unloadAudio]);
+
+  // Handle background music based on game state and settings
+  useEffect(() => {
+    if (!isLoaded) return;
+    
+    if (!gameOver && isMusicOn && !isMusicPlaying) {
+      playBackgroundMusic();
+    } else if ((gameOver || !isMusicOn) && isMusicPlaying) {
+      stopBackgroundMusic();
+    }
+  }, [gameOver, isMusicOn, isLoaded, isMusicPlaying, playBackgroundMusic, stopBackgroundMusic]);
+
+  // Wrapper functions that check sound settings and loading state before playing
+  // Use useCallback to ensure these functions are stable and reactive to state changes
+  const playShootSound = useCallback(() => {
+    if (isSoundOn && isLoaded) {
+      playShootSoundFromStore();
+    }
+  }, [isSoundOn, isLoaded, playShootSoundFromStore]);
+
+  const playCollisionSound = useCallback(() => {
+    if (isSoundOn && isLoaded) {
+      playCollisionSoundFromStore();
+    }
+  }, [isSoundOn, isLoaded, playCollisionSoundFromStore]);
+
+  const playSpecialMissileSound = useCallback(() => {
+    if (isSoundOn && isLoaded) {
+      playSpecialMissileSoundFromStore();
+    }
+  }, [isSoundOn, isLoaded, playSpecialMissileSoundFromStore]);
+
+  const restartMusic = useCallback(() => {
+    if (isMusicOn && isLoaded) {
+      restartBackgroundMusic();
+    }
+  }, [isMusicOn, isLoaded, restartBackgroundMusic]);
 
   // Bullet management
   const {
