@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Dimensions } from 'react-native';
 import { Bullet } from '../components/game/types';
 import { isOffScreen } from '../components/game/utils';

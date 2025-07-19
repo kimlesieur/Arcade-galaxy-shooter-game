@@ -10,15 +10,19 @@ The `GameScreen.tsx` component has been refactored to separate concerns into cus
 
 #### Core Game Logic
 - **`useGameLogic.ts`** - Main orchestrator hook that combines all other hooks
-- **`useGameState.ts`** - Manages core game state (player position, health, score, game over)
 
 #### Game Systems
 - **`useAudio.ts`** - Handles all audio functionality (background music, sound effects)
 - **`useBullets.ts`** - Manages bullet state, movement, and shooting logic
 - **`useEnemies.ts`** - Handles enemy spawning, movement, and lifecycle
 - **`useCollisionDetection.ts`** - Manages collision detection between game objects
-- **`useSpecialMissile.ts`** - Controls special missile charging and firing system
 - **`useExplosions.ts`** - Manages explosion effects and animations
+
+### Stores (`stores/`)
+
+#### State Management
+- **`SettingsStore.ts`** - Manages game settings (sound, music, bullet state)
+- **`GameLogicStore.ts`** - Manages core game state and special missile system
 
 ### Components (`components/interface/`)
 
@@ -85,15 +89,16 @@ export default function GameScreen() {
 }
 ```
 
-### Individual Hook Usage
+### Direct Store Usage
 
-You can also use individual hooks if you need more granular control:
+You can also use the stores directly if you need more granular control:
 
 ```tsx
-import { useGameState, useAudio, useBullets } from '../hooks';
+import { useGameLogicStore } from '../stores/GameLogicStore';
+import { useAudio, useBullets } from '../hooks';
 
 function CustomGameComponent() {
-  const { playerX, playerY, score, gameOver } = useGameState();
+  const { playerX, playerY, score, gameOver } = useGameLogicStore();
   const { playShootSound } = useAudio(gameOver);
   const { bullets, shootBullet } = useBullets(gameOver, false, playerPosRef, playShootSound, () => {});
   
@@ -109,6 +114,7 @@ function CustomGameComponent() {
 4. **Maintainability** - Easier to locate and fix issues
 5. **Readability** - Main component is now much cleaner and easier to understand
 6. **Performance** - Better optimization opportunities with isolated state
+7. **State Management** - Centralized state management with Zustand stores
 
 ## Migration Notes
 
@@ -116,11 +122,11 @@ function CustomGameComponent() {
 - All game mechanics work exactly the same
 - The refactoring is purely structural - no behavioral changes
 - All existing imports and dependencies remain the same
+- Game state and special missile functionality are now managed directly through the GameLogicStore
 
 ## Future Improvements
 
-1. **State Management** - Consider using a state management library like Zustand or Redux for complex state
-2. **Performance** - Add memoization to expensive calculations
-3. **Testing** - Add unit tests for individual hooks and components
-4. **Type Safety** - Add more comprehensive TypeScript interfaces
-5. **Error Handling** - Add error boundaries and better error handling 
+1. **Performance** - Add memoization to expensive calculations
+2. **Testing** - Add unit tests for individual hooks and components
+3. **Type Safety** - Add more comprehensive TypeScript interfaces
+4. **Error Handling** - Add error boundaries and better error handling 

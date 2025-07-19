@@ -1,25 +1,40 @@
-import { useGameState } from './useGameState';
+import { useRef, useEffect } from 'react';
 import { useAudio } from './useAudio';
 import { useBullets } from './useBullets';
 import { useEnemies } from './useEnemies';
 import { useCollisionDetection } from './useCollisionDetection';
-import { useSpecialMissile } from './useSpecialMissile';
+import { useGameLogicStore } from '../stores/GameLogicStore';
 import { useExplosions } from './useExplosions';
 
 export const useGameLogic = () => {
-  // Core game state
+  // Get all game state and actions directly from the store
   const {
     playerX,
     playerY,
     score,
     playerHealth,
     gameOver,
-    playerPosRef,
     setPlayerX,
     resetGame: resetGameState,
     decrementHealth,
     addScore,
-  } = useGameState();
+    // Special missile state and actions
+    isSpecialMissileCharging,
+    specialMissileChargeProgress,
+    triggerSpecialFireEffect,
+    setIsSpecialMissileCharging,
+    setSpecialMissileChargeProgress,
+    resetSpecialMissile,
+    triggerFireEffect,
+  } = useGameLogicStore();
+
+  // Ref to always have latest player position
+  const playerPosRef = useRef({ x: playerX, y: playerY });
+  
+  useEffect(() => {
+    playerPosRef.current.x = playerX;
+    playerPosRef.current.y = playerY;
+  }, [playerX, playerY]);
 
   // Audio management
   const {
@@ -28,17 +43,6 @@ export const useGameLogic = () => {
     playSpecialMissileSound,
     restartMusic,
   } = useAudio(gameOver);
-
-  // Special missile system
-  const {
-    isSpecialMissileCharging,
-    specialMissileChargeProgress,
-    triggerSpecialFireEffect,
-    setIsSpecialMissileCharging,
-    setSpecialMissileChargeProgress,
-    resetSpecialMissile,
-    triggerFireEffect,
-  } = useSpecialMissile();
 
   // Bullet management
   const {
