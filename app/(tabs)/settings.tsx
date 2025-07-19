@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Volume2, VolumeX, Zap } from 'lucide-react-native';
+import { useSettingsStore } from '../../stores/SettingsStore';
 
 export default function SettingsTab() {
-  const [soundEnabled, setSoundEnabled] = React.useState(true);
-  const [vibrationEnabled, setVibrationEnabled] = React.useState(true);
+  const { isSoundOn, isHapticFeedbackOn, toggleSound, toggleHapticFeedback } = useSettingsStore();
 
   return (
     <View style={styles.container}>
@@ -13,25 +13,25 @@ export default function SettingsTab() {
       <View style={styles.section}>
         <TouchableOpacity
           style={styles.setting}
-          onPress={() => setSoundEnabled(!soundEnabled)}
+          onPress={toggleSound}
         >
-          {soundEnabled ? (
+          {isSoundOn ? (
             <Volume2 size={24} color="#00ffff" />
           ) : (
             <VolumeX size={24} color="#666" />
           )}
           <Text style={styles.settingText}>Sound Effects</Text>
-          <View style={[styles.toggle, soundEnabled && styles.toggleActive]} />
+          <View style={[styles.toggle, isSoundOn && styles.toggleActive]} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.setting}
-          onPress={() => setVibrationEnabled(!vibrationEnabled)}
+          onPress={toggleHapticFeedback}
         >
-          <Zap size={24} color={vibrationEnabled ? '#00ffff' : '#666'} />
+          <Zap size={24} color={isHapticFeedbackOn ? '#00ffff' : '#666'} />
           <Text style={styles.settingText}>Haptic Feedback</Text>
           <View
-            style={[styles.toggle, vibrationEnabled && styles.toggleActive]}
+            style={[styles.toggle, isHapticFeedbackOn && styles.toggleActive]}
           />
         </TouchableOpacity>
       </View>
