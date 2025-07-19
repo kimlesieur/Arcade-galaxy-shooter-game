@@ -9,6 +9,7 @@ import { runOnJS } from 'react-native-reanimated';
 import { Dimensions } from 'react-native';
 
 import { useGameLogic } from '../hooks';
+import { useGameObjectsStore } from '../stores/GameObjectsStore';
 import { GameUI, GameCanvas, ExplosionOverlay, SpecialMissileButton } from './interface';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -40,10 +41,10 @@ export default function GameScreen() {
     // Special missile actions
     setIsSpecialMissileCharging,
     setSpecialMissileChargeProgress,
-    
-    // Explosion actions
-    removeExplosion,
   } = useGameLogic();
+
+  // Get removeExplosion from the GameObjectsStore
+  const { removeExplosion } = useGameObjectsStore();
 
   // Pan gesture for moving the player ship
   const panGesture = Gesture.Pan().onUpdate((event) => {

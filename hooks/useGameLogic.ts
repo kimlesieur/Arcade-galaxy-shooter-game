@@ -1,11 +1,10 @@
 import { useRef, useEffect, useCallback } from 'react';
-import { useBullets } from './useBullets';
-import { useEnemies } from './useEnemies';
-import { useCollisionDetection } from './useCollisionDetection';
 import { useGameLogicStore } from '../stores/GameLogicStore';
 import { useAudioStore } from '../stores/AudioStore';
 import { useSettingsStore } from '../stores/SettingsStore';
-import { useExplosions } from './useExplosions';
+import { useGameObjectsStore } from '../stores/GameObjectsStore';
+import { Bullet } from '../components/game/types';
+import * as Haptics from 'expo-haptics';
 
 export const useGameLogic = () => {
   // Get all game state and actions directly from the store
@@ -43,6 +42,18 @@ export const useGameLogic = () => {
     playCollisionSound: playCollisionSoundFromStore,
     playSpecialMissileSound: playSpecialMissileSoundFromStore,
   } = useAudioStore();
+
+  // Get game objects state and actions
+  const {
+    bullets,
+    enemies,
+    explosions,
+    startGameLoop,
+    stopGameLoop,
+    checkCollisions,
+    addBullet,
+    resetAll: resetGameObjects,
+  } = useGameObjectsStore();
 
   // Ref to always have latest player position
   const playerPosRef = useRef({ x: playerX, y: playerY });
@@ -98,71 +109,81 @@ export const useGameLogic = () => {
     }
   }, [isMusicOn, isLoaded, restartBackgroundMusic]);
 
-  // Bullet management
-  const {
-    bullets,
-    setBullets,
-    shootSpecialMissile: shootSpecialMissileFromHook,
-    resetBullets,
-  } = useBullets(
-    gameOver,
-    isSpecialMissileCharging,
-    playerPosRef,
-    playShootSound,
-    playSpecialMissileSound
-  );
+  // Game loop management
+  useEffect(() => {
+    if (gameOver) {
+      stopGameLoop();
+    } else {
+      startGameLoop();
+    }
 
-  // Enemy management
-  const {
-    enemies,
-    setEnemies,
-    resetEnemies,
-    purpleEnemyCountRef,
-  } = useEnemies(
-    gameOver,
-    playerX,
-    playerY,
-    decrementHealth,
-    playCollisionSound
-  );
-
-  // Explosion management
-  const {
-    explosions,
-    addExplosion,
-    removeExplosion,
-    resetExplosions,
-  } = useExplosions();
+    return () => {
+      stopGameLoop();
+    };
+  }, [gameOver, startGameLoop, stopGameLoop]);
 
   // Collision detection
-  useCollisionDetection(
-    gameOver,
-    playerX,
-    playerY,
-    bullets,
-    enemies,
-    setBullets,
-    setEnemies,
-    addExplosion,
-    addScore,
-    decrementHealth,
-    playCollisionSound,
-    purpleEnemyCountRef
-  );
+  useEffect(() => {
+    if (gameOver) return;
+    
+    checkCollisions({
+      playerX,
+      playerY,
+      addScore,
+      decrementHealth,
+      playCollisionSound,
+      _playShootSound: playShootSound,
+      _playSpecialMissileSound: playSpecialMissileSound,
+    });
+  }, [gameOver, playerX, playerY, bullets, enemies, checkCollisions, addScore, decrementHealth, playCollisionSound, playShootSound, playSpecialMissileSound]);
+
+  // Automatic shooting
+  useEffect(() => {
+    if (gameOver || isSpecialMissileCharging) return;
+    
+    const interval = setInterval(() => {
+      const bullet: Bullet = {
+        id: Math.random().toString(36).substr(2, 9),
+        x: playerPosRef.current.x,
+        y: playerPosRef.current.y - 30,
+        velocityX: 0,
+        velocityY: -500,
+        isPlayer: true,
+        damage: 1,
+        radius: 6,
+        type: 'normal',
+      };
+      addBullet(bullet);
+      playShootSound();
+    }, 700);
+    
+    return () => clearInterval(interval);
+  }, [gameOver, isSpecialMissileCharging, addBullet, playShootSound]);
 
   // Enhanced shoot special missile function
   const shootSpecialMissile = () => {
-    shootSpecialMissileFromHook();
+    const bullet: Bullet = {
+      id: Math.random().toString(36).substr(2, 9),
+      x: playerPosRef.current.x,
+      y: playerPosRef.current.y - 30,
+      velocityX: 0,
+      velocityY: -600,
+      isPlayer: true,
+      damage: 3,
+      radius: 10,
+      type: 'special',
+    };
+    addBullet(bullet);
+    playSpecialMissileSound();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     triggerFireEffect();
   };
 
   // Enhanced restart function
   const handleRestart = () => {
     resetGameState();
-    resetBullets();
-    resetEnemies();
+    resetGameObjects();
     resetSpecialMissile();
-    resetExplosions();
     restartMusic();
   };
 
@@ -193,8 +214,5 @@ export const useGameLogic = () => {
     // Special missile actions
     setIsSpecialMissileCharging,
     setSpecialMissileChargeProgress,
-    
-    // Explosion actions
-    removeExplosion,
   };
 }; 
