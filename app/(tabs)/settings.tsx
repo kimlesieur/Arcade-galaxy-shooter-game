@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Volume2, VolumeX, Zap } from 'lucide-react-native';
+import { Volume2, VolumeX, Zap, Music, MicOff } from 'lucide-react-native';
 import { useSettingsStore } from '../../stores/SettingsStore';
 
 export default function SettingsTab() {
-  const { isSoundOn, isHapticFeedbackOn, toggleSound, toggleHapticFeedback } = useSettingsStore();
+  const { isSoundOn, isMusicOn, isHapticFeedbackOn, toggleSound, toggleMusic, toggleHapticFeedback } = useSettingsStore();
 
   return (
     <View style={styles.container}>
@@ -22,6 +22,19 @@ export default function SettingsTab() {
           )}
           <Text style={styles.settingText}>Sound Effects</Text>
           <View style={[styles.toggle, isSoundOn && styles.toggleActive]} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.setting}
+          onPress={toggleMusic}
+        >
+          {isMusicOn ? (
+            <Music size={24} color="#00ffff" />
+          ) : (
+            <MicOff size={24} color="#666" />
+          )}
+          <Text style={styles.settingText}>Background Music</Text>
+          <View style={[styles.toggle, isMusicOn && styles.toggleActive]} />
         </TouchableOpacity>
 
         <TouchableOpacity

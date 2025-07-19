@@ -1,7 +1,9 @@
 import { useRef, useEffect } from 'react';
 import { Audio } from 'expo-av';
+import { useSettingsStore } from '../stores/SettingsStore';
 
 export const useAudio = (gameOver: boolean) => {
+  const { isSoundOn, isMusicOn } = useSettingsStore();
   const soundRef = useRef<Audio.Sound | null>(null);
   const shootSoundRef = useRef<Audio.Sound | null>(null);
   const collisionSoundRef = useRef<Audio.Sound | null>(null);
@@ -65,7 +67,7 @@ export const useAudio = (gameOver: boolean) => {
       await sound.playAsync();
     }
     
-    if (!gameOver) {
+    if (!gameOver && isMusicOn) {
       playMusic();
     } else {
       if (soundRef.current) {
@@ -79,28 +81,28 @@ export const useAudio = (gameOver: boolean) => {
         soundRef.current = null;
       }
     };
-  }, [gameOver]);
+  }, [gameOver, isMusicOn]);
 
   const playShootSound = () => {
-    if (shootSoundRef.current) {
+    if (shootSoundRef.current && isSoundOn) {
       shootSoundRef.current.replayAsync();
     }
   };
 
   const playCollisionSound = () => {
-    if (collisionSoundRef.current) {
+    if (collisionSoundRef.current && isSoundOn) {
       collisionSoundRef.current.replayAsync();
     }
   };
 
   const playSpecialMissileSound = () => {
-    if (specialMissileSoundRef.current) {
+    if (specialMissileSoundRef.current && isSoundOn) {
       specialMissileSoundRef.current.replayAsync();
     }
   };
 
   const restartMusic = () => {
-    if (soundRef.current) {
+    if (soundRef.current && isMusicOn) {
       soundRef.current.replayAsync();
     }
   };
