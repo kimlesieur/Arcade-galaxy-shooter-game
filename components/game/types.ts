@@ -39,7 +39,8 @@ export interface Projectile {
   isPlayer: boolean;
   damage: number;
   radius: number;
-  type?: 'normal' | 'special'; // Add type to distinguish special missiles
+  type?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser'; // Different missile types
+  collisionRadiusMultiplier: number; // Multiplier for collision detection radius
 }
 
 export interface Explosion {
@@ -55,6 +56,7 @@ export interface Explosion {
     y: number;
   }[];
   type: 'enemy' | 'player';
+  bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser'; // What caused the explosion
   createdAt: number;
 }
 
@@ -80,7 +82,7 @@ export interface EnemyShip {
   x: number; // horizontal position (0-1, as a fraction of screen width)
   y: number; // vertical position (0-1, as a fraction of screen height)
   speed: number; // downward speed in units per second
-  type: 'red' | 'purple'; // enemy type
+  type: 'red' | 'purple' | 'blue' | 'green' | 'orange'; // enemy type
   color: string; // color for rendering
 }
 

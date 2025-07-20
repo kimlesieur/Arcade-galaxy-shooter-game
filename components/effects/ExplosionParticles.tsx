@@ -5,7 +5,7 @@ import { useSharedValue, withTiming, useAnimatedReaction, runOnJS } from 'react-
 interface ExplosionParticlesProps {
   x: number;
   y: number;
-  type: 'red' | 'purple';
+  type: 'red' | 'purple' | 'blue' | 'green' | 'orange';
   onFinish?: () => void;
 }
 
@@ -21,11 +21,21 @@ interface Particle {
 const PARTICLE_COUNT = 20;
 const DURATION = 500; // ms
 
-function getColorPalette(type: 'red' | 'purple') {
-  if (type === 'purple') {
-    return ['#a259e6', '#7f53ac', '#b8a1f7', '#ffffff', '#5e60ce'];
+function getColorPalette(type: 'red' | 'purple' | 'blue' | 'green' | 'orange') {
+  switch (type) {
+    case 'red':
+      return ['#ff0000', '#ff4444', '#ff8888', '#ffcccc'];
+    case 'purple':
+      return ['#a259e6', '#b366e6', '#c473e6', '#d580e6'];
+    case 'blue':
+      return ['#4a90e2', '#5a9ee2', '#6aace2', '#7abae2'];
+    case 'green':
+      return ['#7ed321', '#8ed321', '#9ed321', '#aed321'];
+    case 'orange':
+      return ['#f5a623', '#f5b623', '#f5c623', '#f5d623'];
+    default:
+      return ['#ff0000', '#ff4444', '#ff8888', '#ffcccc'];
   }
-  return ['#ffec99', '#ffb347', '#ff3333', '#ffd700', '#ff9800'];
 }
 
 function randomBetween(a: number, b: number) {

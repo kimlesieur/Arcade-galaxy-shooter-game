@@ -16,11 +16,17 @@ const CHARGE_TIME = 1000; // 1 second to fully charge
 
 interface SpecialMissileButtonProps {
   onSpecialMissileReady: () => void;
+  onChargingStart?: () => void;
+  onChargingEnd?: () => void;
+  onChargeProgress?: (progress: number) => void;
   disabled?: boolean;
 }
 
 export default function SpecialMissileButton({ 
   onSpecialMissileReady, 
+  onChargingStart,
+  onChargingEnd,
+  onChargeProgress,
   disabled = false 
 }: SpecialMissileButtonProps) {
   const [isCharging, setIsCharging] = useState(false);
@@ -46,6 +52,11 @@ export default function SpecialMissileButton({
     chargeAnimationRef.setValue(0);
     chargeStartTimeRef.current = Date.now();
     
+    // Notify parent component that charging has started
+    if (onChargingStart) {
+      onChargingStart();
+    }
+    
     // Haptic feedback for start charging
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
@@ -63,6 +74,11 @@ export default function SpecialMissileButton({
         const progress = Math.min(elapsed / CHARGE_TIME, 1);
         setChargeProgress(progress);
         
+        // Notify parent component of charge progress
+        if (onChargeProgress) {
+          onChargeProgress(progress);
+        }
+        
         if (progress >= 1) {
           // Fully charged
           runOnJS(handleFullyCharged)();
@@ -79,6 +95,11 @@ export default function SpecialMissileButton({
     chargeAnimationRef.setValue(0);
     chargeStartTimeRef.current = null;
     
+    // Notify parent component that charging has ended
+    if (onChargingEnd) {
+      onChargingEnd();
+    }
+    
     if (chargeIntervalRef.current) {
       clearInterval(chargeIntervalRef.current);
       chargeIntervalRef.current = null;
@@ -92,6 +113,11 @@ export default function SpecialMissileButton({
     setIsCharging(false);
     setChargeProgress(1);
     chargeStartTimeRef.current = null;
+    
+    // Notify parent component that charging has ended
+    if (onChargingEnd) {
+      onChargingEnd();
+    }
     
     if (chargeIntervalRef.current) {
       clearInterval(chargeIntervalRef.current);
@@ -193,16 +219,6 @@ export default function SpecialMissileButton({
               chargeProgress >= 1 && styles.missileIconReady
             ]} />
           </View>
-          
-          {/* Charge indicator */}
-          {isCharging && chargeProgress < 1 && (
-            <View style={styles.chargeIndicator}>
-              <View style={[
-                styles.chargeBar,
-                { width: `${chargeProgress * 100}%` }
-              ]} />
-            </View>
-          )}
         </TouchableOpacity>
       </GestureDetector>
     </View>
@@ -257,20 +273,5 @@ const styles = StyleSheet.create({
   },
   missileIconReady: {
     backgroundColor: '#00ff00',
-  },
-  chargeIndicator: {
-    position: 'absolute',
-    bottom: -10,
-    left: 10,
-    right: 10,
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  chargeBar: {
-    height: '100%',
-    backgroundColor: '#ff6b35',
-    borderRadius: 2,
   },
 }); 
