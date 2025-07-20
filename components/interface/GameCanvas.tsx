@@ -3,6 +3,7 @@ import { View, StyleSheet, Dimensions } from 'react-native';
 import { Canvas } from '@shopify/react-native-skia';
 import GameRenderer from '../game/GameRenderer';
 import Starfield from '../background/Starfield';
+import AsteroidBackground from '../background/AsteroidBackground';
 import { Bullet, EnemyShip } from '../game/types';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -32,6 +33,11 @@ export default function GameCanvas({
         width={SCREEN_WIDTH}
         height={SCREEN_HEIGHT}
         starCount={20}
+      />
+      <AsteroidBackground
+        width={SCREEN_WIDTH}
+        height={SCREEN_HEIGHT}
+        asteroidCount={5}
       />
       <Canvas style={{ flex: 1 }}>
         <GameRenderer
