@@ -4,6 +4,7 @@ import { checkCollision } from '../components/game/utils';
 import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../utils/constants';
 import { Dimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { useSettingsStore } from './SettingsStore';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -139,8 +140,11 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
         return enemy.y * SCREEN_HEIGHT < SCREEN_HEIGHT + ENEMY_HEIGHT;
       });
 
-      // Spawn new enemy if enough time has passed
+      // Spawn new enemies if enough time has passed
       if (newSpawnTimer >= ENEMY_SPAWN_INTERVAL) {
+        // Get enemies multiplier from settings
+        const enemiesMultiplier = useSettingsStore.getState().enemiesMultiplier;
+        
         // Define enemy types with their properties
         const enemyTypes = [
           { type: 'red' as const, color: '#ff3333', spawnChance: 0.4 },
@@ -150,29 +154,32 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
           { type: 'orange' as const, color: '#f5a623', spawnChance: 0.15 }
         ];
         
-        // Select enemy type based on spawn chances
-        const random = Math.random();
-        let cumulativeChance = 0;
-        let selectedEnemy = enemyTypes[0]; // default to red
-        
-        for (const enemyType of enemyTypes) {
-          cumulativeChance += enemyType.spawnChance;
-          if (random <= cumulativeChance) {
-            selectedEnemy = enemyType;
-            break;
+        // Spawn multiple enemies based on multiplier
+        for (let i = 0; i < enemiesMultiplier; i++) {
+          // Select enemy type based on spawn chances
+          const random = Math.random();
+          let cumulativeChance = 0;
+          let selectedEnemy = enemyTypes[0]; // default to red
+          
+          for (const enemyType of enemyTypes) {
+            cumulativeChance += enemyType.spawnChance;
+            if (random <= cumulativeChance) {
+              selectedEnemy = enemyType;
+              break;
+            }
           }
+          
+          const newEnemy: EnemyShip = {
+            id: Math.random().toString(36).substr(2, 9),
+            x: Math.random(),
+            y: 0,
+            speed: ENEMY_SPEED,
+            type: selectedEnemy.type,
+            color: selectedEnemy.color,
+          };
+          
+          updatedEnemies.push(newEnemy);
         }
-        
-        const newEnemy: EnemyShip = {
-          id: Math.random().toString(36).substr(2, 9),
-          x: Math.random(),
-          y: 0,
-          speed: ENEMY_SPEED,
-          type: selectedEnemy.type,
-          color: selectedEnemy.color,
-        };
-        
-        updatedEnemies.push(newEnemy);
       }
 
       // Calculate enemy type counts
