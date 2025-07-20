@@ -40,6 +40,7 @@ export interface Projectile {
   damage: number;
   radius: number;
   type?: 'normal' | 'special'; // Add type to distinguish special missiles
+  collisionRadiusMultiplier: number; // Multiplier for collision detection radius
 }
 
 export interface Explosion {

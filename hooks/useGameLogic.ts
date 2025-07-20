@@ -156,6 +156,11 @@ export const useGameLogic = () => {
         damage: 1,
         radius: 6,
         type: 'normal',
+        collisionRadiusMultiplier: 1, // Regular bullets have normal collision radius
+        // Example of different bullet types you could create:
+        // - Sniper bullet: collisionRadiusMultiplier: 0.5 (precise, small hitbox)
+        // - Shotgun bullet: collisionRadiusMultiplier: 1.5 (wider spread)
+        // - Laser beam: collisionRadiusMultiplier: 3.0 (very wide area)
       };
       addBullet(bullet);
       playShootSound();
@@ -174,8 +179,9 @@ export const useGameLogic = () => {
       velocityY: -600,
       isPlayer: true,
       damage: 3,
-      radius: 10,
+      radius: 12,
       type: 'special',
+      collisionRadiusMultiplier: 10, 
     };
     addBullet(bullet);
     playSpecialMissileSound();

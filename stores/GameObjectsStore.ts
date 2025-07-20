@@ -283,12 +283,13 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
         const enemyX = enemy.x * SCREEN_WIDTH;
         const enemyY = enemy.y * SCREEN_HEIGHT;
 
-        // Regular collision detection for all bullets
+        // Use dynamic collision radius based on bullet properties
+        const effectiveRadius = bullet.radius * bullet.collisionRadiusMultiplier;
         const collisionDetected = checkCollision(
-          bullet.x - bullet.radius,
-          bullet.y - bullet.radius,
-          bullet.radius * 2,
-          bullet.radius * 2,
+          bullet.x - effectiveRadius,
+          bullet.y - effectiveRadius,
+          effectiveRadius * 2,
+          effectiveRadius * 2,
           enemyX - ENEMY_WIDTH / 2,
           enemyY,
           ENEMY_WIDTH,
