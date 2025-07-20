@@ -48,12 +48,14 @@ export const useGameLogic = () => {
     bullets,
     enemies,
     explosions,
+    collisionSparks,
     startGameLoop,
     stopGameLoop,
     checkBulletEnemyCollisions,
     checkPlayerEnemyCollisions,
     addBullet,
     removeExplosion,
+    removeCollisionSpark,
     resetAll: resetGameObjects,
   } = useGameObjectsStore();
 
@@ -189,6 +191,7 @@ export const useGameLogic = () => {
     bullets,
     enemies,
     explosions,
+    collisionSparks,
     
     // Special missile state
     isSpecialMissileCharging,
@@ -204,6 +207,7 @@ export const useGameLogic = () => {
     handleRestart,
     shootSpecialMissile,
     removeExplosion,
+    removeCollisionSpark,
     
     // Special missile actions
     setIsSpecialMissileCharging,

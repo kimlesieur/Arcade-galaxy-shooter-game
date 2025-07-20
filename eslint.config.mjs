@@ -12,18 +12,19 @@ const compat = new FlatCompat({
 export default [
     // Ignore patterns (from .eslintignore)
     {
-        ignores: ['scripts', 'coverage', '.eslintrc.js', 'ios', 'android'],
+        ignores: ['scripts', 'coverage', '.eslintrc.js', 'ios', 'android', 'dist/*'],
     },
     // Main config (from .eslintrc.js)
     ...compat.config({
         root: true,
         extends: ['expo'],
-        plugins: ['unused-imports', '@tanstack/query', 'jest'],
+        plugins: ['unused-imports', '@tanstack/query', 'jest', 'react-compiler'],
         rules: {
             'unused-imports/no-unused-imports': 'error',
             'no-return-await': 'error',
             'prefer-const': 'error',
             'object-shorthand': 'error',
+            'react-compiler/react-compiler': 'error',
         },
         overrides: [
             {

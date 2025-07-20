@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@shopify/react-native-skia';
 import ExplosionRenderer from '../effects/ExplosionRenderer';
 import { getExplosionConfig } from '../../utils/explosionConfigs';
@@ -18,6 +18,12 @@ interface ExplosionOverlayProps {
 
 export default function ExplosionOverlay({ explosions, onExplosionFinish }: ExplosionOverlayProps) {
   const [explosionProgress, setExplosionProgress] = useState<Record<string, number>>({});
+  const onExplosionFinishRef = useRef(onExplosionFinish);
+
+  // Update ref when callback changes
+  useEffect(() => {
+    onExplosionFinishRef.current = onExplosionFinish;
+  }, [onExplosionFinish]);
 
   // Initialize new explosions
   useEffect(() => {
@@ -39,6 +45,7 @@ export default function ExplosionOverlay({ explosions, onExplosionFinish }: Expl
       setExplosionProgress(prev => {
         const updated = { ...prev };
         let hasChanges = false;
+        const completedExplosions: string[] = [];
 
         Object.keys(updated).forEach(id => {
           const explosion = explosions.find(exp => exp.id === id);
@@ -53,9 +60,9 @@ export default function ExplosionOverlay({ explosions, onExplosionFinish }: Expl
               hasChanges = true;
             }
 
-            // Remove completed explosions
+            // Mark completed explosions for removal
             if (newProgress >= 1) {
-              onExplosionFinish(id);
+              completedExplosions.push(id);
               delete updated[id];
               hasChanges = true;
             }
@@ -66,12 +73,22 @@ export default function ExplosionOverlay({ explosions, onExplosionFinish }: Expl
           }
         });
 
+        // Call onExplosionFinish for completed explosions after state update
+        if (completedExplosions.length > 0) {
+          // Use setTimeout to defer the callback execution
+          setTimeout(() => {
+            completedExplosions.forEach(id => {
+              onExplosionFinishRef.current(id);
+            });
+          }, 0);
+        }
+
         return hasChanges ? updated : prev;
       });
     });
 
     return () => cancelAnimationFrame(animationFrame);
-  }, [explosions, explosionProgress, onExplosionFinish]);
+  }, [explosions, explosionProgress]);
 
   return (
     <Canvas style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 50 }}>
@@ -84,7 +101,7 @@ export default function ExplosionOverlay({ explosions, onExplosionFinish }: Expl
             y={explosion.y}
             bulletType={explosion.bulletType || 'normal'}
             progress={progress}
-            onFinish={() => onExplosionFinish(explosion.id)}
+            onFinish={() => onExplosionFinishRef.current(explosion.id)}
           />
         );
       })}

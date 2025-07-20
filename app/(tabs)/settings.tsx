@@ -1,10 +1,20 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Volume2, VolumeX, Zap, Music, MicOff } from 'lucide-react-native';
+import { Volume2, VolumeX, Zap, Music, MicOff, Plus, Minus, Bug } from 'lucide-react-native';
 import { useSettingsStore } from '../../stores/SettingsStore';
 
 export default function SettingsTab() {
-  const { isSoundOn, isMusicOn, isHapticFeedbackOn, toggleSound, toggleMusic, toggleHapticFeedback } = useSettingsStore();
+  const { 
+    isSoundOn, 
+    isMusicOn, 
+    isHapticFeedbackOn, 
+    enemiesMultiplier,
+    toggleSound, 
+    toggleMusic, 
+    toggleHapticFeedback,
+    increaseEnemiesMultiplier,
+    decreaseEnemiesMultiplier
+  } = useSettingsStore();
 
   return (
     <View style={styles.container}>
@@ -49,6 +59,33 @@ export default function SettingsTab() {
         </TouchableOpacity>
       </View>
 
+      {/* Debug Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Bug size={20} color="#ff6b6b" />
+          <Text style={styles.sectionTitle}>Debug Options</Text>
+        </View>
+        
+        <View style={styles.setting}>
+          <Text style={styles.settingText}>Enemies Multiplier</Text>
+          <View style={styles.multiplierControls}>
+            <TouchableOpacity
+              style={styles.multiplierButton}
+              onPress={decreaseEnemiesMultiplier}
+            >
+              <Minus size={16} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.multiplierValue}>{enemiesMultiplier}x</Text>
+            <TouchableOpacity
+              style={styles.multiplierButton}
+              onPress={increaseEnemiesMultiplier}
+            >
+              <Plus size={16} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
       <View style={styles.credits}>
         <Text style={styles.creditsTitle}>Arcade Galaxy Shooter</Text>
         <Text style={styles.creditsText}>Built with React Native & Skia</Text>
@@ -78,6 +115,20 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 30,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2a2a4f',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ff6b6b',
+    marginLeft: 10,
+  },
   setting: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -101,6 +152,28 @@ const styles = StyleSheet.create({
   },
   toggleActive: {
     backgroundColor: '#00ffff',
+  },
+  multiplierControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  multiplierButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#555',
+  },
+  multiplierValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#00ffff',
+    minWidth: 40,
+    textAlign: 'center',
   },
   credits: {
     flex: 1,

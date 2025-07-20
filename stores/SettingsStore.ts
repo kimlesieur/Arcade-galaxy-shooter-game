@@ -6,6 +6,8 @@ interface SettingsState {
   isSoundOn: boolean;
   isMusicOn: boolean;
   isHapticFeedbackOn: boolean;
+  // Debug settings
+  enemiesMultiplier: number;
 }
 
 interface SettingsActions {
@@ -15,17 +17,23 @@ interface SettingsActions {
   setSoundOn: (isOn: boolean) => void;
   setMusicOn: (isOn: boolean) => void;
   setHapticFeedbackOn: (isOn: boolean) => void;
+  // Debug actions
+  setEnemiesMultiplier: (multiplier: number) => void;
+  increaseEnemiesMultiplier: () => void;
+  decreaseEnemiesMultiplier: () => void;
 }
 
 type SettingsStore = SettingsState & SettingsActions;
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       // Initial state
       isSoundOn: true,
       isMusicOn: true,
       isHapticFeedbackOn: true,
+      // Debug settings
+      enemiesMultiplier: 1,
 
       // Actions
       toggleSound: () => set((state) => ({ isSoundOn: !state.isSoundOn })),
@@ -34,6 +42,17 @@ export const useSettingsStore = create<SettingsStore>()(
       setSoundOn: (isOn: boolean) => set({ isSoundOn: isOn }),
       setMusicOn: (isOn: boolean) => set({ isMusicOn: isOn }),
       setHapticFeedbackOn: (isOn: boolean) => set({ isHapticFeedbackOn: isOn }),
+      
+      // Debug actions
+      setEnemiesMultiplier: (multiplier: number) => set({ enemiesMultiplier: Math.max(1, Math.min(10, multiplier)) }),
+      increaseEnemiesMultiplier: () => {
+        const current = get().enemiesMultiplier;
+        set({ enemiesMultiplier: Math.min(10, current + 1) });
+      },
+      decreaseEnemiesMultiplier: () => {
+        const current = get().enemiesMultiplier;
+        set({ enemiesMultiplier: Math.max(1, current - 1) });
+      },
     }),
     {
       name: 'settings-storage',

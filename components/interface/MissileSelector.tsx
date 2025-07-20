@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { getAllMissileConfigs, getMissileConfigsByType } from '../../utils/missileConfigs';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { getMissileConfigsByType } from '../../utils/missileConfigs';
 import * as Haptics from 'expo-haptics';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface MissileSelectorProps {
   currentMissileType: string;

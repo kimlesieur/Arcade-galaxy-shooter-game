@@ -69,6 +69,50 @@
 
 # Features
 
+## Collision Spark Effect
+The collision spark effect creates a visually stunning yellow/white spark animation when an enemy ship collides with the player ship, providing immediate visual feedback for player damage.
+
+### Visual Characteristics
+- **Color Palette**: Yellow (#ffff00), light yellow (#ffff80), white (#ffffff), cream (#fffacd), khaki (#f0e68c), and gold (#ffd700)
+- **Particle Count**: Configurable (15-20 main particles + 8 small particles)
+- **Duration**: Configurable (600ms - 1000ms animation cycle)
+- **Effects**: 
+  - Flash effect at collision point (optional)
+  - Multiple spark particles radiating outward
+  - Smooth fade-out effect as animation progresses
+  - Configurable particle sizes and speeds
+
+### Technical Implementation
+
+#### Components
+1. **CollisionSparkEffect.tsx**: Core spark rendering component using Skia
+2. **CollisionSparkOverlay.tsx**: Animation management and overlay rendering
+3. **collisionSparkConfigs.ts**: Configuration system with type-safe enum for different spark effects
+4. **GameObjectsStore.ts**: State management for collision sparks
+5. **GameScreen.tsx**: Integration with main game interface
+
+#### Animation Features
+- **Type-Safe Configuration**: Enum-based configuration system (CollisionSparkType.DEFAULT, INTENSE, SUBTLE)
+- **Configurable Effects**: Multiple preset configurations with full TypeScript support
+- **Smooth Animation**: 60fps animation with proper cleanup
+- **Layered Effects**: Flash + main sparks + small sparks for depth
+- **Performance Optimized**: Efficient particle rendering with Skia
+- **Flexible Duration**: Configurable animation duration per effect type
+
+#### Integration Points
+- **Collision Detection**: Automatically triggered in `checkPlayerEnemyCollisions`
+- **State Management**: Integrated with existing game object store
+- **Cleanup**: Automatic removal when animation completes
+- **Z-Index**: Renders above game elements but below UI (z-index: 60)
+
+### Usage
+The collision spark effect automatically triggers when:
+1. An enemy ship collides with the player ship
+2. Player health is decremented
+3. Collision sound and haptic feedback are triggered
+
+The effect appears at the player's current position and provides immediate visual feedback for the collision event.
+
 ## Special Missile Feature
 The special missile feature adds an interactive button to the bottom-right corner of the game screen that allows players to fire powerful special missiles.
 

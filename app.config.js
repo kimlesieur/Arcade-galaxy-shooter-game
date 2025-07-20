@@ -7,4 +7,12 @@ export default ({ config }) => ({
     ios: {
         bundleIdentifier: "com.kimlesieur.my-app",
     },
+    android: {
+        package: "com.kimlesieur.myapp",
+    },
+    expo: {
+        experiments: {
+            reactCompiler: true,
+        },
+    },
 }); 

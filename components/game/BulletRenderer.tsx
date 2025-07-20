@@ -143,7 +143,6 @@ const SpecialMissileRenderer: React.FC<BulletRendererProps> = ({ bullet }) => {
 // Sniper bullet renderer - precise and fast
 const SniperBulletRenderer: React.FC<BulletRendererProps> = ({ bullet }) => {
   const config = getMissileConfig('sniper');
-  const time = Date.now() * 0.01;
   
   return (
     <Group>

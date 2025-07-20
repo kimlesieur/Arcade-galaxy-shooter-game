@@ -1,3 +1,5 @@
+"use no memo";
+
 import React, { useMemo } from 'react';
 import { Group, Path, Skia, Rect, Circle, Image, useImage } from '@shopify/react-native-skia';
 import { EnemyShip, Bullet } from './types';
