@@ -14,12 +14,12 @@ interface GameObjectsState {
   
   // Enemies
   enemies: EnemyShip[];
-  purpleEnemyCount: number;
+  enemyTypeCounts: Record<'red' | 'purple' | 'blue' | 'green' | 'orange', number>; // Track counts for all enemy types
   spawnTimer: number;
   lastFrameTime: number | null;
   
   // Explosions
-  explosions: { id: string; x: number; y: number; type: 'red' | 'purple'; bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser' }[];
+  explosions: { id: string; x: number; y: number; type: 'red' | 'purple' | 'blue' | 'green' | 'orange'; bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser' }[];
   
   // Game loop
   animationFrameId: number | null;
@@ -40,7 +40,7 @@ interface GameObjectsActions {
   resetEnemies: () => void;
   
   // Explosion actions
-  addExplosion: (x: number, y: number, type: 'red' | 'purple', bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser') => void;
+  addExplosion: (x: number, y: number, type: 'red' | 'purple' | 'blue' | 'green' | 'orange', bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser') => void;
   removeExplosion: (id: string) => void;
   resetExplosions: () => void;
   
@@ -71,7 +71,7 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
   // Initial state
   bullets: [],
   enemies: [],
-  purpleEnemyCount: 0,
+  enemyTypeCounts: { red: 0, purple: 0, blue: 0, green: 0, orange: 0 },
   spawnTimer: 0,
   lastFrameTime: null,
   explosions: [],
@@ -113,9 +113,10 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
   addEnemy: (enemy: EnemyShip) => {
     set((state) => ({
       enemies: [...state.enemies, enemy],
-      purpleEnemyCount: enemy.type === 'purple' 
-        ? state.purpleEnemyCount + 1 
-        : state.purpleEnemyCount
+      enemyTypeCounts: {
+        ...state.enemyTypeCounts,
+        [enemy.type]: state.enemyTypeCounts[enemy.type] + 1
+      }
     }));
   },
 
@@ -140,15 +141,26 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
 
       // Spawn new enemy if enough time has passed
       if (newSpawnTimer >= ENEMY_SPAWN_INTERVAL) {
-        const totalEnemies = updatedEnemies.length;
-        const purpleEnemies = state.purpleEnemyCount;
-        let type: 'red' | 'purple' = 'red';
-        let color = '#ff3333';
+        // Define enemy types with their properties
+        const enemyTypes = [
+          { type: 'red' as const, color: '#ff3333', spawnChance: 0.4 },
+          { type: 'purple' as const, color: '#a259e6', spawnChance: 0.1 },
+          { type: 'blue' as const, color: '#4a90e2', spawnChance: 0.2 },
+          { type: 'green' as const, color: '#7ed321', spawnChance: 0.15 },
+          { type: 'orange' as const, color: '#f5a623', spawnChance: 0.15 }
+        ];
         
-        // Only allow 10% purple enemies
-        if (totalEnemies > 0 && purpleEnemies / totalEnemies < 0.1 && Math.random() < 0.1) {
-          type = 'purple';
-          color = '#a259e6';
+        // Select enemy type based on spawn chances
+        const random = Math.random();
+        let cumulativeChance = 0;
+        let selectedEnemy = enemyTypes[0]; // default to red
+        
+        for (const enemyType of enemyTypes) {
+          cumulativeChance += enemyType.spawnChance;
+          if (random <= cumulativeChance) {
+            selectedEnemy = enemyType;
+            break;
+          }
         }
         
         const newEnemy: EnemyShip = {
@@ -156,29 +168,40 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
           x: Math.random(),
           y: 0,
           speed: ENEMY_SPEED,
-          type,
-          color,
+          type: selectedEnemy.type,
+          color: selectedEnemy.color,
         };
         
         updatedEnemies.push(newEnemy);
       }
 
+      // Calculate enemy type counts
+      const newEnemyTypeCounts = { red: 0, purple: 0, blue: 0, green: 0, orange: 0 };
+      updatedEnemies.forEach(enemy => {
+        newEnemyTypeCounts[enemy.type]++;
+      });
+
       return {
         enemies: updatedEnemies,
         spawnTimer: newSpawnTimer >= ENEMY_SPAWN_INTERVAL ? 0 : newSpawnTimer,
-        purpleEnemyCount: updatedEnemies.filter(e => e.type === 'purple').length
+        enemyTypeCounts: newEnemyTypeCounts
       };
     });
   },
 
   removeEnemy: (id: string) => {
     set((state) => {
-      const enemyToRemove = state.enemies.find(e => e.id === id);
+      const updatedEnemies = state.enemies.filter((enemy) => enemy.id !== id);
+      
+      // Calculate new enemy type counts
+      const newEnemyTypeCounts = { red: 0, purple: 0, blue: 0, green: 0, orange: 0 };
+      updatedEnemies.forEach(enemy => {
+        newEnemyTypeCounts[enemy.type]++;
+      });
+      
       return {
-        enemies: state.enemies.filter((enemy) => enemy.id !== id),
-        purpleEnemyCount: enemyToRemove?.type === 'purple' 
-          ? Math.max(0, state.purpleEnemyCount - 1)
-          : state.purpleEnemyCount
+        enemies: updatedEnemies,
+        enemyTypeCounts: newEnemyTypeCounts
       };
     });
   },
@@ -186,14 +209,14 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
   resetEnemies: () => {
     set({ 
       enemies: [], 
-      purpleEnemyCount: 0, 
+      enemyTypeCounts: { red: 0, purple: 0, blue: 0, green: 0, orange: 0 }, 
       spawnTimer: 0, 
       lastFrameTime: null 
     });
   },
 
   // Explosion actions
-  addExplosion: (x: number, y: number, type: 'red' | 'purple', bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser') => {
+  addExplosion: (x: number, y: number, type: 'red' | 'purple' | 'blue' | 'green' | 'orange', bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser') => {
     set((state) => ({
       explosions: [...state.explosions, { 
         id: `${Date.now()}-${Math.random()}`, 
@@ -337,9 +360,15 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
       set({ bullets: newBullets });
     }
     if (enemiesChanged) {
+      // Calculate new enemy type counts
+      const newEnemyTypeCounts = { red: 0, purple: 0, blue: 0, green: 0, orange: 0 };
+      newEnemies.forEach(enemy => {
+        newEnemyTypeCounts[enemy.type]++;
+      });
+      
       set({ 
         enemies: newEnemies,
-        purpleEnemyCount: newEnemies.filter(e => e.type === 'purple').length
+        enemyTypeCounts: newEnemyTypeCounts
       });
     }
   },
@@ -373,7 +402,17 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
       ) {
         // Remove enemy and decrement health
         const newEnemies = state.enemies.filter((e, index) => index !== i);
-        set({ enemies: newEnemies });
+        
+        // Calculate new enemy type counts
+        const newEnemyTypeCounts = { red: 0, purple: 0, blue: 0, green: 0, orange: 0 };
+        newEnemies.forEach(enemy => {
+          newEnemyTypeCounts[enemy.type]++;
+        });
+        
+        set({ 
+          enemies: newEnemies,
+          enemyTypeCounts: newEnemyTypeCounts
+        });
         
         // Haptic feedback on collision
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
@@ -397,7 +436,7 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
     set({
       bullets: [],
       enemies: [],
-      purpleEnemyCount: 0,
+      enemyTypeCounts: { red: 0, purple: 0, blue: 0, green: 0, orange: 0 },
       spawnTimer: 0,
       lastFrameTime: null,
       explosions: [],

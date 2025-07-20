@@ -82,7 +82,7 @@ export interface EnemyShip {
   x: number; // horizontal position (0-1, as a fraction of screen width)
   y: number; // vertical position (0-1, as a fraction of screen height)
   speed: number; // downward speed in units per second
-  type: 'red' | 'purple'; // enemy type
+  type: 'red' | 'purple' | 'blue' | 'green' | 'orange'; // enemy type
   color: string; // color for rendering
 }
 

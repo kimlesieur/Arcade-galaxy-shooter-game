@@ -16,25 +16,64 @@ interface MinimalGameRendererProps {
   triggerSpecialFireEffect?: boolean;
 }
 
-function renderEnemies(enemies: EnemyShip[], screenWidth: number, screenHeight: number) {
+function renderEnemies(
+  enemies: EnemyShip[], 
+  screenWidth: number, 
+  screenHeight: number,
+  enemy01Image: any,
+  enemy02Image: any,
+  enemy03Image: any,
+  enemy04Image: any,
+) {
   return enemies.map((enemy) => {
     // Memoize transform array for each enemy
     const transform = [
       { translateX: enemy.x * screenWidth },
       { translateY: enemy.y * screenHeight },
     ];
+    
+    // Choose image based on enemy type
+    let enemyImage;
+    switch (enemy.type) {
+      case 'red':
+        enemyImage = enemy01Image;
+        break;
+      case 'purple':
+        enemyImage = enemy02Image;
+        break;
+      case 'blue':
+        enemyImage = enemy03Image;
+        break;
+      case 'green':
+        enemyImage = enemy04Image;
+        break;
+      default:
+        enemyImage = enemy01Image; // fallback
+    }
+    
     return (
       <Group
         key={enemy.id}
         transform={transform}
       >
-        <Rect
-          x={-ENEMY_WIDTH / 2}
-          y={0}
-          width={ENEMY_WIDTH}
-          height={ENEMY_HEIGHT}
-          color={enemy.color}
-        />
+        {enemyImage ? (
+          <Image
+            image={enemyImage}
+            x={-ENEMY_WIDTH / 2}
+            y={0}
+            width={ENEMY_WIDTH}
+            height={ENEMY_HEIGHT}
+          />
+        ) : (
+          // Fallback to colored rectangle if image fails to load
+          <Rect
+            x={-ENEMY_WIDTH / 2}
+            y={0}
+            width={ENEMY_WIDTH}
+            height={ENEMY_HEIGHT}
+            color={enemy.color}
+          />
+        )}
       </Group>
     );
   });
@@ -133,6 +172,12 @@ function GameRenderer({
   // Load the player ship image
   const playerShipImage = useImage(require('../../assets/images/player_ship.png'));
 
+  // Load enemy images
+  const enemy01Image = useImage(require('../../assets/images/enemies/enemy_01.png'));
+  const enemy02Image = useImage(require('../../assets/images/enemies/enemy_02.png'));
+  const enemy03Image = useImage(require('../../assets/images/enemies/enemy_03.png'));
+  const enemy04Image = useImage(require('../../assets/images/enemies/enemy_04.png'));
+
   // Memoize player ship path (fallback if image fails to load)
   const playerShipPath = useMemo(() => {
     const path = Skia.Path.Make();
@@ -157,8 +202,8 @@ function GameRenderer({
 
   // Memoize enemy rendering
   const enemyElements = useMemo(
-    () => renderEnemies(enemies, screenWidth, screenHeight),
-    [enemies, screenWidth, screenHeight]
+    () => renderEnemies(enemies, screenWidth, screenHeight, enemy01Image, enemy02Image, enemy03Image, enemy04Image),
+    [enemies, screenWidth, screenHeight, enemy01Image, enemy02Image, enemy03Image, enemy04Image]
   );
 
   // Memoize bullet rendering

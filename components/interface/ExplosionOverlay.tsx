@@ -7,7 +7,7 @@ interface Explosion {
   id: string;
   x: number;
   y: number;
-  type: 'red' | 'purple';
+  type: 'red' | 'purple' | 'blue' | 'green' | 'orange';
   bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser';
 }
 
