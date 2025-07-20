@@ -50,7 +50,8 @@ export const useGameLogic = () => {
     explosions,
     startGameLoop,
     stopGameLoop,
-    checkCollisions,
+    checkBulletEnemyCollisions,
+    checkPlayerEnemyCollisions,
     addBullet,
     resetAll: resetGameObjects,
   } = useGameObjectsStore();
@@ -126,16 +127,19 @@ export const useGameLogic = () => {
   useEffect(() => {
     if (gameOver) return;
     
-    checkCollisions({
+    // Check bullet-enemy collisions
+    checkBulletEnemyCollisions({
+      addScore,
+    });
+    
+    // Check player-enemy collisions
+    checkPlayerEnemyCollisions({
       playerX,
       playerY,
-      addScore,
       decrementHealth,
       playCollisionSound,
-      _playShootSound: playShootSound,
-      _playSpecialMissileSound: playSpecialMissileSound,
     });
-  }, [gameOver, playerX, playerY, bullets, enemies, checkCollisions, addScore, decrementHealth, playCollisionSound, playShootSound, playSpecialMissileSound]);
+  }, [gameOver, playerX, playerY, bullets, enemies, checkBulletEnemyCollisions, checkPlayerEnemyCollisions, addScore, decrementHealth, playCollisionSound]);
 
   // Automatic shooting
   useEffect(() => {

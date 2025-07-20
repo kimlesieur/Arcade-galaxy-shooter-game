@@ -48,15 +48,16 @@ interface GameObjectsActions {
   startGameLoop: () => void;
   stopGameLoop: () => void;
   
-  // Collision detection
-  checkCollisions: (params: {
+  // Collision detection - separated into two functions
+  checkBulletEnemyCollisions: (params: {
+    addScore: (points: number) => void;
+  }) => void;
+  
+  checkPlayerEnemyCollisions: (params: {
     playerX: number;
     playerY: number;
-    addScore: (points: number) => void;
     decrementHealth: () => void;
     playCollisionSound: () => void;
-    _playShootSound: () => void;
-    _playSpecialMissileSound: () => void;
   }) => void;
   
   // Spawning
@@ -259,14 +260,8 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
   },
 
   // Collision detection
-  checkCollisions: ({ 
-    playerX, 
-    playerY, 
+  checkBulletEnemyCollisions: ({ 
     addScore, 
-    decrementHealth, 
-    playCollisionSound,
-    _playShootSound,
-    _playSpecialMissileSound
   }) => {
     const state = get();
     
@@ -335,9 +330,29 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
       }
     }
 
+    // Update state if there were changes
+    if (bulletsChanged) {
+      set({ bullets: newBullets });
+    }
+    if (enemiesChanged) {
+      set({ 
+        enemies: newEnemies,
+        purpleEnemyCount: newEnemies.filter(e => e.type === 'purple').length
+      });
+    }
+  },
+
+  checkPlayerEnemyCollisions: ({ 
+    playerX, 
+    playerY, 
+    decrementHealth, 
+    playCollisionSound,
+  }) => {
+    const state = get();
+    
     // Check player-enemy collisions
-    for (let i = newEnemies.length - 1; i >= 0; i--) {
-      const enemy = newEnemies[i];
+    for (let i = state.enemies.length - 1; i >= 0; i--) {
+      const enemy = state.enemies[i];
       const enemyX = enemy.x * SCREEN_WIDTH;
       const enemyY = enemy.y * SCREEN_HEIGHT;
 
@@ -355,25 +370,14 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
         )
       ) {
         // Remove enemy and decrement health
-        newEnemies.splice(i, 1);
-        enemiesChanged = true;
+        const newEnemies = state.enemies.filter((e, index) => index !== i);
+        set({ enemies: newEnemies });
         
         // Haptic feedback on collision
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
         playCollisionSound();
         decrementHealth();
       }
-    }
-
-    // Update state if there were changes
-    if (bulletsChanged) {
-      set({ bullets: newBullets });
-    }
-    if (enemiesChanged) {
-      set({ 
-        enemies: newEnemies,
-        purpleEnemyCount: newEnemies.filter(e => e.type === 'purple').length
-      });
     }
   },
 

@@ -107,7 +107,8 @@ sequenceDiagram
     loop Every Frame
         GameObjectsStore->>GameObjectsStore: updateBullets()
         GameObjectsStore->>GameObjectsStore: updateEnemies()
-        GameObjectsStore->>GameObjectsStore: checkCollisions()
+        GameObjectsStore->>GameObjectsStore: checkBulletEnemyCollisions()
+GameObjectsStore->>GameObjectsStore: checkPlayerEnemyCollisions()
         GameObjectsStore->>GameLogicStore: addScore()
         GameObjectsStore->>GameLogicStore: decrementHealth()
         GameObjectsStore->>AudioStore: playCollisionSound()
