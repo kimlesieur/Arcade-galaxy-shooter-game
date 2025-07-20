@@ -5,6 +5,7 @@ import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../utils
 import { Dimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useSettingsStore } from './SettingsStore';
+import { CollisionSparkType } from '../utils/collisionSparkConfigs';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -21,6 +22,9 @@ interface GameObjectsState {
   
   // Explosions
   explosions: { id: string; x: number; y: number; type: 'red' | 'purple' | 'blue' | 'green' | 'orange'; bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser' }[];
+  
+  // Collision sparks
+  collisionSparks: { id: string; x: number; y: number; configId?: CollisionSparkType }[];
   
   // Game loop
   animationFrameId: number | null;
@@ -44,6 +48,11 @@ interface GameObjectsActions {
   addExplosion: (x: number, y: number, type: 'red' | 'purple' | 'blue' | 'green' | 'orange', bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser') => void;
   removeExplosion: (id: string) => void;
   resetExplosions: () => void;
+  
+  // Collision spark actions
+  addCollisionSpark: (x: number, y: number, configId?: CollisionSparkType) => void;
+  removeCollisionSpark: (id: string) => void;
+  resetCollisionSparks: () => void;
   
   // Game loop actions
   startGameLoop: () => void;
@@ -76,6 +85,7 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
   spawnTimer: 0,
   lastFrameTime: null,
   explosions: [],
+  collisionSparks: [],
   animationFrameId: null,
   isGameLoopRunning: false,
 
@@ -243,6 +253,29 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
 
   resetExplosions: () => {
     set({ explosions: [] });
+  },
+
+  // Collision spark actions
+  addCollisionSpark: (x: number, y: number, configId?: CollisionSparkType) => {
+    const spark = {
+      id: Math.random().toString(36).substr(2, 9),
+      x,
+      y,
+      configId,
+    };
+    set((state) => ({
+      collisionSparks: [...state.collisionSparks, spark]
+    }));
+  },
+
+  removeCollisionSpark: (id: string) => {
+    set((state) => ({
+      collisionSparks: state.collisionSparks.filter((spark) => spark.id !== id)
+    }));
+  },
+
+  resetCollisionSparks: () => {
+    set({ collisionSparks: [] });
   },
 
   // Game loop actions
@@ -425,6 +458,9 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
         playCollisionSound();
         decrementHealth();
+        
+        // Add collision spark effect at player position
+        get().addCollisionSpark(playerX, playerY, CollisionSparkType.SUBTLE);
       }
     }
   },
@@ -447,6 +483,7 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
       spawnTimer: 0,
       lastFrameTime: null,
       explosions: [],
+      collisionSparks: [],
       animationFrameId: null,
       isGameLoopRunning: false,
     });

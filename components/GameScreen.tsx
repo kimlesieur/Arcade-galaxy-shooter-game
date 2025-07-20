@@ -6,6 +6,7 @@ import { runOnJS } from 'react-native-reanimated';
 import GameUI from './interface/GameUI';
 import GameCanvas from './interface/GameCanvas';
 import ExplosionOverlay from './interface/ExplosionOverlay';
+import CollisionSparkOverlay from './interface/CollisionSparkOverlay';
 import SpecialMissileButton from './interface/SpecialMissileButton';
 import MissileSelector from './interface/MissileSelector';
 import { useGameLogic } from '../hooks/useGameLogic';
@@ -22,6 +23,7 @@ export default function GameScreen() {
     bullets,
     enemies,
     explosions,
+    collisionSparks,
     isSpecialMissileCharging,
     specialMissileChargeProgress,
     triggerSpecialFireEffect,
@@ -33,6 +35,7 @@ export default function GameScreen() {
     currentMissileType,
     setCurrentMissileType,
     removeExplosion,
+    removeCollisionSpark,
   } = useGameLogic();
 
   // Pan gesture for player movement
@@ -78,6 +81,12 @@ export default function GameScreen() {
           <ExplosionOverlay
             explosions={explosions}
             onExplosionFinish={removeExplosion}
+          />
+          
+          {/* Collision Spark Effects Overlay */}
+          <CollisionSparkOverlay
+            collisionSparks={collisionSparks}
+            onSparkFinish={removeCollisionSpark}
           />
           
           {/* Special Missile Button */}
