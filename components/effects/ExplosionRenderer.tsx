@@ -1,5 +1,5 @@
 import React from 'react';
-import { Group, Circle, Rect } from '@shopify/react-native-skia';
+import { Group, Circle } from '@shopify/react-native-skia';
 import { getExplosionConfig } from '../../utils/explosionConfigs';
 
 interface ExplosionRendererProps {
@@ -18,7 +18,6 @@ const BaseExplosionRenderer: React.FC<ExplosionRendererProps> = ({
   progress 
 }) => {
   const config = getExplosionConfig(bulletType);
-  const time = Date.now() * 0.01;
   
   // Calculate particle positions
   const particles = Array.from({ length: config.particleCount }).map((_, index) => {
@@ -54,10 +53,8 @@ const BaseExplosionRenderer: React.FC<ExplosionRendererProps> = ({
 const ShockwaveRenderer: React.FC<ExplosionRendererProps> = ({ 
   x, 
   y, 
-  bulletType, 
   progress 
 }) => {
-  const config = getExplosionConfig(bulletType);
   const shockwaveRadius = 50 + progress * 100;
   const opacity = (1 - progress) * 0.6;
   
@@ -78,10 +75,8 @@ const ShockwaveRenderer: React.FC<ExplosionRendererProps> = ({
 const FlashRenderer: React.FC<ExplosionRendererProps> = ({ 
   x, 
   y, 
-  bulletType, 
   progress 
 }) => {
-  const config = getExplosionConfig(bulletType);
   const flashRadius = 30 * (1 - progress);
   const opacity = (1 - progress) * 0.8;
   
