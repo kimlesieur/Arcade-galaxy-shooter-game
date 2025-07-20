@@ -19,7 +19,7 @@ interface GameObjectsState {
   lastFrameTime: number | null;
   
   // Explosions
-  explosions: { id: string; x: number; y: number; type: 'red' | 'purple' }[];
+  explosions: { id: string; x: number; y: number; type: 'red' | 'purple'; bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser' }[];
   
   // Game loop
   animationFrameId: number | null;
@@ -40,7 +40,7 @@ interface GameObjectsActions {
   resetEnemies: () => void;
   
   // Explosion actions
-  addExplosion: (x: number, y: number, type: 'red' | 'purple') => void;
+  addExplosion: (x: number, y: number, type: 'red' | 'purple', bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser') => void;
   removeExplosion: (id: string) => void;
   resetExplosions: () => void;
   
@@ -193,13 +193,14 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
   },
 
   // Explosion actions
-  addExplosion: (x: number, y: number, type: 'red' | 'purple') => {
+  addExplosion: (x: number, y: number, type: 'red' | 'purple', bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser') => {
     set((state) => ({
       explosions: [...state.explosions, { 
         id: `${Date.now()}-${Math.random()}`, 
         x, 
         y, 
-        type 
+        type,
+        bulletType 
       }]
     }));
   },
@@ -310,8 +311,8 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           }
 
-          // Create explosion
-          get().addExplosion(enemyX, enemyY, enemy.type);
+          // Create explosion with bullet type information
+          get().addExplosion(enemyX, enemyY, enemy.type, bullet.type);
 
           // For regular bullets, destroy the bullet and break
           if (!isSpecialMissile) {

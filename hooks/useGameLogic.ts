@@ -1,9 +1,9 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { useGameLogicStore } from '../stores/GameLogicStore';
 import { useAudioStore } from '../stores/AudioStore';
 import { useSettingsStore } from '../stores/SettingsStore';
 import { useGameObjectsStore } from '../stores/GameObjectsStore';
-import { Bullet } from '../components/game/types';
+import { createBulletFromConfig, getMissileConfig } from '../utils/missileConfigs';
 import * as Haptics from 'expo-haptics';
 
 export const useGameLogic = () => {
@@ -53,6 +53,7 @@ export const useGameLogic = () => {
     checkBulletEnemyCollisions,
     checkPlayerEnemyCollisions,
     addBullet,
+    removeExplosion,
     resetAll: resetGameObjects,
   } = useGameObjectsStore();
 
@@ -141,48 +142,26 @@ export const useGameLogic = () => {
     });
   }, [gameOver, playerX, playerY, bullets, enemies, checkBulletEnemyCollisions, checkPlayerEnemyCollisions, addScore, decrementHealth, playCollisionSound]);
 
-  // Automatic shooting
+  // Missile type selection state
+  const [currentMissileType, setCurrentMissileType] = useState('normal');
+
+  // Automatic shooting with selected missile type
   useEffect(() => {
     if (gameOver || isSpecialMissileCharging) return;
     
+    const config = getMissileConfig(currentMissileType);
     const interval = setInterval(() => {
-      const bullet: Bullet = {
-        id: Math.random().toString(36).substr(2, 9),
-        x: playerPosRef.current.x,
-        y: playerPosRef.current.y - 30,
-        velocityX: 0,
-        velocityY: -500,
-        isPlayer: true,
-        damage: 1,
-        radius: 6,
-        type: 'normal',
-        collisionRadiusMultiplier: 1, // Regular bullets have normal collision radius
-        // Example of different bullet types you could create:
-        // - Sniper bullet: collisionRadiusMultiplier: 0.5 (precise, small hitbox)
-        // - Shotgun bullet: collisionRadiusMultiplier: 1.5 (wider spread)
-        // - Laser beam: collisionRadiusMultiplier: 3.0 (very wide area)
-      };
+      const bullet = createBulletFromConfig(currentMissileType, playerPosRef.current.x, playerPosRef.current.y - 30);
       addBullet(bullet);
       playShootSound();
-    }, 700);
+    }, config.fireRate);
     
     return () => clearInterval(interval);
-  }, [gameOver, isSpecialMissileCharging, addBullet, playShootSound]);
+  }, [gameOver, isSpecialMissileCharging, currentMissileType, addBullet, playShootSound]);
 
   // Enhanced shoot special missile function
   const shootSpecialMissile = () => {
-    const bullet: Bullet = {
-      id: Math.random().toString(36).substr(2, 9),
-      x: playerPosRef.current.x,
-      y: playerPosRef.current.y - 30,
-      velocityX: 0,
-      velocityY: -600,
-      isPlayer: true,
-      damage: 3,
-      radius: 12,
-      type: 'special',
-      collisionRadiusMultiplier: 10, 
-    };
+    const bullet = createBulletFromConfig('special', playerPosRef.current.x, playerPosRef.current.y - 30);
     addBullet(bullet);
     playSpecialMissileSound();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -216,10 +195,15 @@ export const useGameLogic = () => {
     specialMissileChargeProgress,
     triggerSpecialFireEffect,
     
+    // Missile selection
+    currentMissileType,
+    setCurrentMissileType,
+    
     // Actions
     setPlayerX,
     handleRestart,
     shootSpecialMissile,
+    removeExplosion,
     
     // Special missile actions
     setIsSpecialMissileCharging,

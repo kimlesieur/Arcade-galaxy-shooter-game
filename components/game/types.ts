@@ -39,7 +39,7 @@ export interface Projectile {
   isPlayer: boolean;
   damage: number;
   radius: number;
-  type?: 'normal' | 'special'; // Add type to distinguish special missiles
+  type?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser'; // Different missile types
   collisionRadiusMultiplier: number; // Multiplier for collision detection radius
 }
 
@@ -56,6 +56,7 @@ export interface Explosion {
     y: number;
   }[];
   type: 'enemy' | 'player';
+  bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser'; // What caused the explosion
   createdAt: number;
 }
 
