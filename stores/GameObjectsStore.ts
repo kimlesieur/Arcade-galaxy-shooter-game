@@ -6,6 +6,7 @@ import { Dimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useSettingsStore } from './SettingsStore';
 import { CollisionSparkType } from '../utils/collisionSparkConfigs';
+import { ENEMY_CONFIGS } from '../utils/enemyConfigs';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -132,7 +133,6 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
   },
 
   updateEnemies: (delta: number) => {
-    const ENEMY_SPEED = 100;
     const ENEMY_SPAWN_INTERVAL = 1200;
     
     set((state) => {
@@ -155,21 +155,15 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
         // Get enemies multiplier from settings
         const enemiesMultiplier = useSettingsStore.getState().enemiesMultiplier;
         
-        // Define enemy types with their properties
-        const enemyTypes = [
-          { type: 'red' as const, color: '#ff3333', spawnChance: 0.4 },
-          { type: 'purple' as const, color: '#a259e6', spawnChance: 0.1 },
-          { type: 'blue' as const, color: '#4a90e2', spawnChance: 0.2 },
-          { type: 'green' as const, color: '#7ed321', spawnChance: 0.15 },
-          { type: 'orange' as const, color: '#f5a623', spawnChance: 0.15 }
-        ];
+        // Get enemy types from configuration
+        const enemyTypes = Object.values(ENEMY_CONFIGS);
         
         // Spawn multiple enemies based on multiplier
         for (let i = 0; i < enemiesMultiplier; i++) {
           // Select enemy type based on spawn chances
           const random = Math.random();
           let cumulativeChance = 0;
-          let selectedEnemy = enemyTypes[0]; // default to red
+          let selectedEnemy = enemyTypes[0]; // default to first enemy
           
           for (const enemyType of enemyTypes) {
             cumulativeChance += enemyType.spawnChance;
@@ -183,9 +177,12 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
             id: Math.random().toString(36).substr(2, 9),
             x: Math.random(),
             y: 0,
-            speed: ENEMY_SPEED,
-            type: selectedEnemy.type,
+            speed: selectedEnemy.speed, // Use speed from configuration
+            type: selectedEnemy.id as 'red' | 'purple' | 'blue' | 'green' | 'orange',
             color: selectedEnemy.color,
+            health: selectedEnemy.health, // Use health from configuration
+            maxHealth: selectedEnemy.health, // Set max health same as current health
+            points: selectedEnemy.points, // Use points from configuration
           };
           
           updatedEnemies.push(newEnemy);
@@ -365,12 +362,12 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
           newEnemies.splice(i, 1);
           enemiesChanged = true;
 
-          // Scoring
+          // Scoring based on enemy points
           if (isSpecialMissile) {
-            addScore(enemy.type === 'purple' ? 5 : 3);
+            addScore(enemy.points * 2); // Special missiles give double points
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
           } else {
-            addScore(enemy.type === 'purple' ? 2 : 1);
+            addScore(enemy.points);
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           }
 

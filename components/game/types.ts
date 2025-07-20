@@ -84,6 +84,9 @@ export interface EnemyShip {
   speed: number; // downward speed in units per second
   type: 'red' | 'purple' | 'blue' | 'green' | 'orange'; // enemy type
   color: string; // color for rendering
+  health: number; // current health
+  maxHealth: number; // maximum health
+  points: number; // points awarded when destroyed
 }
 
 export type Bullet = Projectile;
