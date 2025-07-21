@@ -3,7 +3,7 @@ import { View, StyleSheet, Dimensions } from 'react-native';
 import { Canvas } from '@shopify/react-native-skia';
 import GameRenderer from '../game/GameRenderer';
 import FractalGalaxyShader from '../background/FractalGalaxyShader';
-import { Bullet, EnemyShip, Barrier } from '../game/types';
+import { Bullet, EnemyShip, Barrier, Collectible } from '../game/types';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -13,6 +13,7 @@ interface GameCanvasProps {
   bullets: Bullet[];
   enemies: EnemyShip[];
   barriers: Barrier[];
+  collectibles: Collectible[];
   isSpecialMissileCharging: boolean;
   specialMissileChargeProgress: number;
   triggerSpecialFireEffect: boolean;
@@ -24,6 +25,7 @@ export default function GameCanvas({
   bullets,
   enemies,
   barriers,
+  collectibles,
   isSpecialMissileCharging,
   specialMissileChargeProgress,
   triggerSpecialFireEffect,
@@ -43,6 +45,7 @@ export default function GameCanvas({
           bullets={bullets}
           enemies={enemies}
           barriers={barriers}
+          collectibles={collectibles}
           isSpecialMissileCharging={isSpecialMissileCharging}
           specialMissileChargeProgress={specialMissileChargeProgress}
           triggerSpecialFireEffect={triggerSpecialFireEffect}

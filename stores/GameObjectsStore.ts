@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Bullet, EnemyShip, Barrier } from '../components/game/types';
+import { Bullet, EnemyShip, Barrier, Collectible } from '../components/game/types';
 import { checkCollision } from '../components/game/utils';
 import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../utils/constants';
 import { Dimensions } from 'react-native';
@@ -8,6 +8,7 @@ import { useSettingsStore } from './SettingsStore';
 import { CollisionSparkType } from '../utils/collisionSparkConfigs';
 import { ENEMY_CONFIGS } from '../utils/enemyConfigs';
 import { BARRIER_CONFIGS } from '../utils/barrierConfigs';
+import { selectRandomCollectible } from '../utils/collectibleConfigs';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -26,6 +27,11 @@ interface GameObjectsState {
   barriers: Barrier[];
   barrierTypeCounts: Record<'classic' | 'fire' | 'laser' | 'electric' | 'plasma', number>; // Track counts for all barrier types
   barrierSpawnTimer: number;
+  
+  // Collectibles
+  collectibles: Collectible[];
+  collectibleSpawnTimer: number;
+  collectibleTypeCounts: Record<'health' | 'shield' | 'sniper' | 'shotgun' | 'laser', number>;
   
   // Explosions
   explosions: { id: string; x: number; y: number; type: 'red' | 'purple' | 'blue' | 'green' | 'orange'; bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser' }[];
@@ -56,6 +62,12 @@ interface GameObjectsActions {
   updateBarriers: (delta: number) => void;
   removeBarrier: (id: string) => void;
   resetBarriers: () => void;
+  
+  // Collectible actions
+  addCollectible: (collectible: Collectible) => void;
+  updateCollectibles: (delta: number) => void;
+  removeCollectible: (id: string) => void;
+  resetCollectibles: () => void;
   
   // Explosion actions
   addExplosion: (x: number, y: number, type: 'red' | 'purple' | 'blue' | 'green' | 'orange', bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser') => void;
@@ -94,9 +106,18 @@ interface GameObjectsActions {
     addScore: (points: number) => void;
   }) => void;
   
+  checkPlayerCollectibleCollisions: (params: {
+    playerX: number;
+    playerY: number;
+    onCollectHealth: () => void;
+    onCollectShield: () => void;
+    onCollectWeapon: (weaponType: string) => void;
+  }) => void;
+  
   // Spawning
   spawnEnemy: () => void;
   spawnBarrier: () => void;
+  spawnCollectible: () => void;
   
   // Reset all
   resetAll: () => void;
@@ -112,6 +133,9 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
   barriers: [],
   barrierTypeCounts: { classic: 0, fire: 0, laser: 0, electric: 0, plasma: 0 },
   barrierSpawnTimer: 0,
+  collectibles: [],
+  collectibleSpawnTimer: 0,
+  collectibleTypeCounts: { health: 0, shield: 0, sniper: 0, shotgun: 0, laser: 0 },
   explosions: [],
   collisionSparks: [],
   animationFrameId: null,
@@ -381,6 +405,80 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
     });
   },
 
+  // Collectible actions
+  addCollectible: (collectible: Collectible) => {
+    set((state) => ({
+      collectibles: [...state.collectibles, collectible]
+    }));
+  },
+
+  updateCollectibles: (delta: number) => {
+    const COLLECTIBLE_SPAWN_INTERVAL = 5000; // Spawn collectibles less frequently than enemies
+    
+    set((state) => {
+      // Update spawn timer
+      const newCollectibleSpawnTimer = state.collectibleSpawnTimer + delta * 1000;
+      
+      // Move collectibles and handle off-screen removal
+      let updatedCollectibles = state.collectibles.map((collectible) => ({
+        ...collectible,
+        y: collectible.y + (collectible.speed * delta) / SCREEN_HEIGHT,
+      }));
+
+      // Remove collectibles that are off screen
+      updatedCollectibles = updatedCollectibles.filter((collectible) => {
+        return collectible.y * SCREEN_HEIGHT < SCREEN_HEIGHT + 50; // Keep some margin
+      });
+
+      // Spawn new collectibles if enough time has passed
+      if (newCollectibleSpawnTimer >= COLLECTIBLE_SPAWN_INTERVAL) {
+        // Select collectible type based on spawn chances
+        const selectedCollectible = selectRandomCollectible();
+        
+        const newCollectible: Collectible = {
+          id: Math.random().toString(36).substr(2, 9),
+          x: Math.random(),
+          y: 0,
+          speed: selectedCollectible.speed,
+          type: selectedCollectible.type,
+          color: selectedCollectible.color,
+          icon: selectedCollectible.icon,
+          bonusValue: selectedCollectible.bonusValue,
+          duration: selectedCollectible.duration,
+          spawnChance: selectedCollectible.spawnChance,
+        };
+        
+        updatedCollectibles.push(newCollectible);
+      }
+
+      // Calculate collectible type counts
+      const newCollectibleTypeCounts = { health: 0, shield: 0, sniper: 0, shotgun: 0, laser: 0 };
+      updatedCollectibles.forEach(collectible => {
+        newCollectibleTypeCounts[collectible.type]++;
+      });
+
+      return {
+        collectibles: updatedCollectibles,
+        collectibleSpawnTimer: newCollectibleSpawnTimer >= COLLECTIBLE_SPAWN_INTERVAL ? 0 : newCollectibleSpawnTimer,
+        collectibleTypeCounts: newCollectibleTypeCounts
+      };
+    });
+  },
+
+  removeCollectible: (id: string) => {
+    set((state) => ({
+      collectibles: state.collectibles.filter((collectible) => collectible.id !== id)
+    }));
+  },
+
+  resetCollectibles: () => {
+    set({ 
+      collectibles: [], 
+      collectibleTypeCounts: { health: 0, shield: 0, sniper: 0, shotgun: 0, laser: 0 }, 
+      collectibleSpawnTimer: 0
+    });
+  },
+
   // Explosion actions
   addExplosion: (x: number, y: number, type: 'red' | 'purple' | 'blue' | 'green' | 'orange', bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser') => {
     set((state) => ({
@@ -452,6 +550,7 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
       get().updateBullets(delta);
       get().updateEnemies(delta);
       get().updateBarriers(delta);
+      get().updateCollectibles(delta); // Update collectibles
 
       const animationFrameId = requestAnimationFrame(loop);
       set({ animationFrameId });
@@ -615,6 +714,73 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
     }
   },
 
+  checkPlayerCollectibleCollisions: ({ 
+    playerX, 
+    playerY, 
+    onCollectHealth, 
+    onCollectShield, 
+    onCollectWeapon,
+  }) => {
+    const state = get();
+    
+    // Check player-collectible collisions
+    for (let i = state.collectibles.length - 1; i >= 0; i--) {
+      const collectible = state.collectibles[i];
+      const collectibleX = collectible.x * SCREEN_WIDTH;
+      const collectibleY = collectible.y * SCREEN_HEIGHT;
+      const COLLECTIBLE_SIZE = 30; // Size of collectible for collision detection
+
+      // Collectible-player collision (rectangle-rectangle)
+      if (
+        checkCollision(
+          playerX - PLAYER_WIDTH / 2,
+          playerY - PLAYER_HEIGHT / 2,
+          PLAYER_WIDTH,
+          PLAYER_HEIGHT,
+          collectibleX - COLLECTIBLE_SIZE / 2,
+          collectibleY - COLLECTIBLE_SIZE / 2,
+          COLLECTIBLE_SIZE,
+          COLLECTIBLE_SIZE
+        )
+      ) {
+        // Remove collectible
+        const newCollectibles = state.collectibles.filter((c, index) => index !== i);
+        
+        // Calculate new collectible type counts
+        const newCollectibleTypeCounts = { health: 0, shield: 0, sniper: 0, shotgun: 0, laser: 0 };
+        newCollectibles.forEach(collectible => {
+          newCollectibleTypeCounts[collectible.type]++;
+        });
+        
+        set({ 
+          collectibles: newCollectibles,
+          collectibleTypeCounts: newCollectibleTypeCounts
+        });
+        
+        // Handle collectible effect based on type
+        switch (collectible.type) {
+          case 'health':
+            onCollectHealth();
+            break;
+          case 'shield':
+            onCollectShield();
+            break;
+          case 'sniper':
+          case 'shotgun':
+          case 'laser':
+            onCollectWeapon(collectible.type);
+            break;
+        }
+        
+        // Haptic feedback on collection
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        
+        // Add collision spark effect at collectible position
+        get().addCollisionSpark(collectibleX, collectibleY, CollisionSparkType.SUBTLE);
+      }
+    }
+  },
+
   checkPlayerBarrierCollisions: ({ 
     playerX, 
     playerY, 
@@ -752,6 +918,10 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
     // This is now handled in updateBarriers
   },
 
+  spawnCollectible: () => {
+    // This is now handled in updateCollectibles
+  },
+
   // Reset all
   resetAll: () => {
     const state = get();
@@ -767,6 +937,9 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
       barriers: [],
       barrierTypeCounts: { classic: 0, fire: 0, laser: 0, electric: 0, plasma: 0 },
       barrierSpawnTimer: 0,
+      collectibles: [],
+      collectibleSpawnTimer: 0,
+      collectibleTypeCounts: { health: 0, shield: 0, sniper: 0, shotgun: 0, laser: 0 },
       explosions: [],
       collisionSparks: [],
       animationFrameId: null,

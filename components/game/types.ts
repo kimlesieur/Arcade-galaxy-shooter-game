@@ -104,4 +104,17 @@ export interface Barrier {
   segmentHeight: number; // height of each segment (0-1, as a fraction of screen height)
 }
 
+export interface Collectible {
+  id: string;
+  x: number; // horizontal position (0-1, as a fraction of screen width)
+  y: number; // vertical position (0-1, as a fraction of screen height)
+  speed: number; // downward speed in units per second
+  type: 'health' | 'shield' | 'sniper' | 'shotgun' | 'laser'; // collectible type
+  color: string; // color for rendering
+  icon: string; // icon identifier for rendering
+  bonusValue: number; // bonus value (health points, shield duration, weapon duration)
+  duration: number; // duration in milliseconds for temporary effects (0 for permanent)
+  spawnChance: number; // chance of spawning this collectible type (0-1)
+}
+
 export type Bullet = Projectile;

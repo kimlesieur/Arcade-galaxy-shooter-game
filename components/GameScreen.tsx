@@ -24,6 +24,7 @@ export default function GameScreen() {
     bullets,
     enemies,
     barriers,
+    collectibles,
     explosions,
     collisionSparks,
     isSpecialMissileCharging,
@@ -77,6 +78,7 @@ export default function GameScreen() {
             bullets={bullets}
             enemies={enemies}
             barriers={barriers}
+            collectibles={collectibles}
             isSpecialMissileCharging={isSpecialMissileCharging}
             specialMissileChargeProgress={specialMissileChargeProgress}
             triggerSpecialFireEffect={triggerSpecialFireEffect}

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Group, Path, Skia, Rect, Circle, Image, useImage } from '@shopify/react-native-skia';
-import { EnemyShip, Bullet, Barrier } from './types';
+import { EnemyShip, Bullet, Barrier, Collectible } from './types';
 import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../../utils/constants';
 import BulletRenderer from './BulletRenderer';
 
@@ -14,6 +14,7 @@ interface MinimalGameRendererProps {
   bullets: Bullet[];
   enemies: EnemyShip[];
   barriers: Barrier[];
+  collectibles: Collectible[];
   isSpecialMissileCharging?: boolean;
   specialMissileChargeProgress?: number;
   triggerSpecialFireEffect?: boolean;
@@ -99,58 +100,89 @@ function renderBarriers(
     const segmentGap = barrier.segmentGap * screenWidth;
     const openingStartX = barrier.openingPosition * screenWidth;
     const openingEndX = openingStartX + (barrier.openingWidth * screenWidth);
-
-    const segments: React.ReactElement[] = [];
-
-    // Calculate available width for segments (total width minus opening width)
-    const availableWidth = screenWidth - (barrier.openingWidth * screenWidth);
-    
-    // Calculate how many segments we can fit in the available width
-    const segmentCount = barrier.segmentCount;
-    const totalGapsWidth = (segmentCount - 1) * segmentGap;
-    const totalSegmentsWidth = availableWidth - totalGapsWidth;
-    const dynamicSegmentWidth = totalSegmentsWidth / segmentCount;
-
-    let currentX = 0;
-
-    // Create segments before the opening
-    const segmentsBeforeOpening = Math.floor(segmentCount * (openingStartX / screenWidth));
-    for (let i = 0; i < segmentsBeforeOpening; i++) {
-      segments.push(
-        <Rect
-          key={`${barrier.id}-before-${i}`}
-          x={currentX}
-          y={barrierY}
-          width={dynamicSegmentWidth}
-          height={segmentHeight}
-          color={barrier.color}
-        />
-      );
-      currentX += dynamicSegmentWidth + segmentGap;
-    }
-
-    // Skip the opening
-    currentX = openingEndX;
-
-    // Create segments after the opening
-    const segmentsAfterOpening = segmentCount - segmentsBeforeOpening;
-    for (let i = 0; i < segmentsAfterOpening; i++) {
-      segments.push(
-        <Rect
-          key={`${barrier.id}-after-${i}`}
-          x={currentX}
-          y={barrierY}
-          width={dynamicSegmentWidth}
-          height={segmentHeight}
-          color={barrier.color}
-        />
-      );
-      currentX += dynamicSegmentWidth + segmentGap;
-    }
+    const segmentWidth = barrier.segmentWidth * screenWidth;
 
     return (
       <Group key={barrier.id}>
-        {segments}
+        {/* Render barrier segments */}
+        {Array.from({ length: barrier.segmentCount }, (_, index) => {
+          const segmentX = index * (segmentWidth + segmentGap);
+          
+          // Skip segments that are in the opening
+          if (segmentX + segmentWidth > openingStartX && segmentX < openingEndX) {
+            return null;
+          }
+          
+          return (
+            <Rect
+              key={`${barrier.id}-segment-${index}`}
+              x={segmentX}
+              y={barrierY}
+              width={segmentWidth}
+              height={segmentHeight}
+              color={barrier.color}
+            />
+          );
+        })}
+      </Group>
+    );
+  });
+}
+
+function renderCollectibles(
+  collectibles: Collectible[], 
+  screenWidth: number, 
+  screenHeight: number,
+) {
+  return collectibles.map((collectible) => {
+    const transform = [
+      { translateX: collectible.x * screenWidth },
+      { translateY: collectible.y * screenHeight },
+    ];
+    
+    const COLLECTIBLE_SIZE = 30;
+    
+    return (
+      <Group
+        key={collectible.id}
+        transform={transform}
+      >
+        {/* Background circle */}
+        <Circle
+          cx={0}
+          cy={0}
+          r={COLLECTIBLE_SIZE / 2}
+          color={collectible.color}
+        />
+        
+        {/* Icon representation (simple shape for now) */}
+        {collectible.type === 'health' && (
+          <Circle
+            cx={0}
+            cy={0}
+            r={COLLECTIBLE_SIZE / 4}
+            color="#ffffff"
+          />
+        )}
+        
+        {collectible.type === 'shield' && (
+          <Rect
+            x={-COLLECTIBLE_SIZE / 4}
+            y={-COLLECTIBLE_SIZE / 4}
+            width={COLLECTIBLE_SIZE / 2}
+            height={COLLECTIBLE_SIZE / 2}
+            color="#ffffff"
+          />
+        )}
+        
+        {['sniper', 'shotgun', 'laser'].includes(collectible.type) && (
+          <Circle
+            cx={0}
+            cy={0}
+            r={COLLECTIBLE_SIZE / 6}
+            color="#ffffff"
+          />
+        )}
       </Group>
     );
   });
@@ -237,6 +269,7 @@ function GameRenderer({
   bullets,
   enemies,
   barriers,
+  collectibles,
   isSpecialMissileCharging = false,
   specialMissileChargeProgress = 0,
   triggerSpecialFireEffect = false,
@@ -290,6 +323,12 @@ function GameRenderer({
     [barriers, screenWidth, screenHeight]
   );
 
+  // Memoize collectible rendering
+  const collectibleElements = useMemo(
+    () => renderCollectibles(collectibles, screenWidth, screenHeight),
+    [collectibles, screenWidth, screenHeight]
+  );
+
   // Only render, no local enemy state or game loop
   return (
     <>
@@ -299,6 +338,8 @@ function GameRenderer({
       {bulletElements}
       {/* Render barriers */}
       {barrierElements}
+      {/* Render collectibles */}
+      {collectibleElements}
       
       {/* Render special fire effect (behind player) */}
       {renderSpecialFireEffect(playerX, playerY, triggerSpecialFireEffect)}

@@ -16,6 +16,10 @@ export interface GameState {
   isSpecialMissileCharging: boolean;
   specialMissileChargeProgress: number;
   triggerSpecialFireEffect: boolean;
+  // Collectible state
+  activeWeaponType: string; // Current active weapon type
+  weaponEndTime: number | null; // When the current weapon expires
+  hasShield: boolean; // Whether player has shield protection
 }
 
 interface GameActions {
@@ -33,6 +37,11 @@ interface GameActions {
   setTriggerSpecialFireEffect: (trigger: boolean) => void;
   resetSpecialMissile: () => void;
   triggerFireEffect: () => void;
+  // Collectible actions
+  setActiveWeaponType: (weaponType: string) => void;
+  setWeaponEndTime: (endTime: number | null) => void;
+  setHasShield: (hasShield: boolean) => void;
+  resetCollectibles: () => void;
 }
 
 export const useGameLogicStore = create<GameState & GameActions>()(
@@ -49,6 +58,10 @@ export const useGameLogicStore = create<GameState & GameActions>()(
       isSpecialMissileCharging: false,
       specialMissileChargeProgress: 0,
       triggerSpecialFireEffect: false,
+      // Collectible state
+      activeWeaponType: '',
+      weaponEndTime: null,
+      hasShield: false,
 
       // Actions
       setPlayerX: (x: number) => set({ playerX: x }),
@@ -71,6 +84,10 @@ export const useGameLogicStore = create<GameState & GameActions>()(
         isSpecialMissileCharging: false,
         specialMissileChargeProgress: 0,
         triggerSpecialFireEffect: false,
+        // Reset collectible state
+        activeWeaponType: '',
+        weaponEndTime: null,
+        hasShield: false,
       }),
       
       decrementHealth: () => {
@@ -105,6 +122,16 @@ export const useGameLogicStore = create<GameState & GameActions>()(
         set({ triggerSpecialFireEffect: true });
         setTimeout(() => set({ triggerSpecialFireEffect: false }), 500);
       },
+
+      // Collectible actions
+      setActiveWeaponType: (weaponType: string) => set({ activeWeaponType: weaponType }),
+      setWeaponEndTime: (endTime: number | null) => set({ weaponEndTime: endTime }),
+      setHasShield: (hasShield: boolean) => set({ hasShield }),
+      resetCollectibles: () => set({
+        activeWeaponType: '',
+        weaponEndTime: null,
+        hasShield: false,
+      }),
     }),
     {
       name: 'game-logic-storage',

@@ -50,6 +50,7 @@ export const useGameLogic = () => {
     bullets,
     enemies,
     barriers,
+    collectibles,
     explosions,
     collisionSparks,
     startGameLoop,
@@ -58,6 +59,7 @@ export const useGameLogic = () => {
     checkPlayerEnemyCollisions,
     checkPlayerBarrierCollisions,
     checkBulletBarrierCollisions,
+    checkPlayerCollectibleCollisions,
     addBullet,
     removeExplosion,
     removeCollisionSpark,
@@ -160,24 +162,59 @@ export const useGameLogic = () => {
     checkBulletBarrierCollisions({
       addScore,
     });
-  }, [gameOver, playerX, playerY, bullets, enemies, barriers, checkBulletEnemyCollisions, checkPlayerEnemyCollisions, checkPlayerBarrierCollisions, checkBulletBarrierCollisions, addScore, decrementHealth, playCollisionSound]);
+
+    // Check player-collectible collisions
+    checkPlayerCollectibleCollisions({
+      playerX,
+      playerY,
+      onCollectHealth: () => {
+        // Add health (max 5)
+        const newHealth = Math.min(playerHealth + 1, 5);
+        useGameLogicStore.getState().setPlayerHealth(newHealth);
+      },
+      onCollectShield: () => {
+        // For now, just log that shield was collected
+        console.log('Shield collected! Shield system not yet implemented.');
+      },
+      onCollectWeapon: (weaponType: string) => {
+        // Set active weapon type and duration
+        console.log('Weapon collected!', weaponType);
+        const endTime = Date.now() + 15000; // 15 seconds
+        useGameLogicStore.getState().setActiveWeaponType(weaponType);
+        useGameLogicStore.getState().setWeaponEndTime(endTime);
+      },
+    });
+  }, [gameOver, playerX, playerY, bullets, enemies, barriers, collectibles, checkBulletEnemyCollisions, checkPlayerEnemyCollisions, checkPlayerBarrierCollisions, checkBulletBarrierCollisions, checkPlayerCollectibleCollisions, addScore, decrementHealth, playCollisionSound, playerHealth]);
 
   // Missile type selection state
   const [currentMissileType, setCurrentMissileType] = useState('normal');
+
+  // Get active weapon type from store
+  const { activeWeaponType, weaponEndTime, setActiveWeaponType, setWeaponEndTime } = useGameLogicStore();
+
+  // Handle weapon expiration
+  useEffect(() => {
+    if (weaponEndTime && Date.now() > weaponEndTime) {
+      setActiveWeaponType('');
+      setWeaponEndTime(null);
+    }
+  }, [weaponEndTime, setActiveWeaponType, setWeaponEndTime]);
 
   // Automatic shooting with selected missile type
   useEffect(() => {
     if (gameOver || isSpecialMissileCharging) return;
     
-    const config = getMissileConfig(currentMissileType);
+    // Use active weapon type if available, otherwise use current missile type
+    const weaponType = activeWeaponType || currentMissileType;
+    const config = getMissileConfig(weaponType);
     const interval = setInterval(() => {
-      const bullet = createBulletFromConfig(currentMissileType, playerPosRef.current.x, playerPosRef.current.y - 30);
+      const bullet = createBulletFromConfig(weaponType, playerPosRef.current.x, playerPosRef.current.y - 30);
       addBullet(bullet);
       playShootSound();
     }, config.fireRate);
     
     return () => clearInterval(interval);
-  }, [gameOver, isSpecialMissileCharging, currentMissileType, addBullet, playShootSound]);
+  }, [gameOver, isSpecialMissileCharging, currentMissileType, activeWeaponType, addBullet, playShootSound]);
 
   // Enhanced shoot special missile function
   const shootSpecialMissile = () => {
@@ -210,6 +247,7 @@ export const useGameLogic = () => {
     bullets,
     enemies,
     barriers,
+    collectibles,
     explosions,
     collisionSparks,
     
