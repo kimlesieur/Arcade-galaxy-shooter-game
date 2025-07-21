@@ -84,6 +84,36 @@ export interface EnemyShip {
   speed: number; // downward speed in units per second
   type: 'red' | 'purple' | 'blue' | 'green' | 'orange'; // enemy type
   color: string; // color for rendering
+  health: number; // current health
+  maxHealth: number; // maximum health
+  points: number; // points awarded when destroyed
+}
+
+export interface Barrier {
+  id: string;
+  y: number; // vertical position (0-1, as a fraction of screen height)
+  speed: number; // downward speed in units per second
+  type: 'classic' | 'fire' | 'laser' | 'electric' | 'plasma'; // barrier type
+  color: string; // color for rendering
+  damage: number; // damage dealt to player on collision
+  openingPosition: number; // horizontal position of the opening (0-1, as a fraction of screen width)
+  openingWidth: number; // width of the opening (0-1, as a fraction of screen width)
+  segmentCount: number; // number of barrier segments
+  segmentWidth: number; // width of each segment (0-1, as a fraction of screen width)
+  segmentGap: number; // gap between segments (0-1, as a fraction of screen width)
+  segmentHeight: number; // height of each segment (0-1, as a fraction of screen height)
+}
+
+export interface Collectible {
+  id: string;
+  x: number; // horizontal position (0-1, as a fraction of screen width)
+  y: number; // vertical position (0-1, as a fraction of screen height)
+  speed: number; // downward speed in units per second
+  type: 'health' | 'shield' | 'sniper' | 'shotgun' | 'laser'; // collectible type
+  color: string; // color for rendering
+  bonusValue: number; // bonus value (health points, shield duration, weapon duration)
+  duration: number; // duration in milliseconds for temporary effects (0 for permanent)
+  spawnChance: number; // chance of spawning this collectible type (0-1)
 }
 
 export type Bullet = Projectile;

@@ -11,10 +11,15 @@ export interface GameState {
   score: number;
   playerHealth: number;
   gameOver: boolean;
+  showGameOverOverlay: boolean; // New state to control when to show the overlay
   // Special missile state
   isSpecialMissileCharging: boolean;
   specialMissileChargeProgress: number;
   triggerSpecialFireEffect: boolean;
+  // Collectible state
+  activeWeaponType: string; // Current active weapon type
+  weaponEndTime: number | null; // When the current weapon expires
+  hasShield: boolean; // Whether player has shield protection
 }
 
 interface GameActions {
@@ -22,6 +27,7 @@ interface GameActions {
   setScore: (score: number) => void;
   setPlayerHealth: (health: number) => void;
   setGameOver: (gameOver: boolean) => void;
+  setShowGameOverOverlay: (show: boolean) => void;
   resetGame: () => void;
   decrementHealth: () => void;
   addScore: (points: number) => void;
@@ -31,6 +37,11 @@ interface GameActions {
   setTriggerSpecialFireEffect: (trigger: boolean) => void;
   resetSpecialMissile: () => void;
   triggerFireEffect: () => void;
+  // Collectible actions
+  setActiveWeaponType: (weaponType: string) => void;
+  setWeaponEndTime: (endTime: number | null) => void;
+  setHasShield: (hasShield: boolean) => void;
+  resetCollectibles: () => void;
 }
 
 export const useGameLogicStore = create<GameState & GameActions>()(
@@ -42,10 +53,15 @@ export const useGameLogicStore = create<GameState & GameActions>()(
       score: 0,
       playerHealth: 3,
       gameOver: false,
+      showGameOverOverlay: false,
       // Special missile state
       isSpecialMissileCharging: false,
       specialMissileChargeProgress: 0,
       triggerSpecialFireEffect: false,
+      // Collectible state
+      activeWeaponType: '',
+      weaponEndTime: null,
+      hasShield: false,
 
       // Actions
       setPlayerX: (x: number) => set({ playerX: x }),
@@ -56,15 +72,22 @@ export const useGameLogicStore = create<GameState & GameActions>()(
       
       setGameOver: (gameOver: boolean) => set({ gameOver }),
       
+      setShowGameOverOverlay: (show: boolean) => set({ showGameOverOverlay: show }),
+      
       resetGame: () => set({
         score: 0,
         playerHealth: 3,
         gameOver: false,
+        showGameOverOverlay: false,
         playerX: SCREEN_WIDTH / 2,
         // Reset special missile state
         isSpecialMissileCharging: false,
         specialMissileChargeProgress: 0,
         triggerSpecialFireEffect: false,
+        // Reset collectible state
+        activeWeaponType: '',
+        weaponEndTime: null,
+        hasShield: false,
       }),
       
       decrementHealth: () => {
@@ -72,7 +95,8 @@ export const useGameLogicStore = create<GameState & GameActions>()(
         const newHealth = playerHealth - 1;
         set({ 
           playerHealth: newHealth,
-          gameOver: newHealth <= 0 
+          gameOver: newHealth <= 0,
+          showGameOverOverlay: false // Don't show overlay immediately, wait for explosion
         });
       },
       
@@ -98,6 +122,16 @@ export const useGameLogicStore = create<GameState & GameActions>()(
         set({ triggerSpecialFireEffect: true });
         setTimeout(() => set({ triggerSpecialFireEffect: false }), 500);
       },
+
+      // Collectible actions
+      setActiveWeaponType: (weaponType: string) => set({ activeWeaponType: weaponType }),
+      setWeaponEndTime: (endTime: number | null) => set({ weaponEndTime: endTime }),
+      setHasShield: (hasShield: boolean) => set({ hasShield }),
+      resetCollectibles: () => set({
+        activeWeaponType: '',
+        weaponEndTime: null,
+        hasShield: false,
+      }),
     }),
     {
       name: 'game-logic-storage',

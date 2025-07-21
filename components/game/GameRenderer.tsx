@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Group, Path, Skia, Rect, Circle, Image, useImage } from '@shopify/react-native-skia';
-import { EnemyShip, Bullet } from './types';
+import { EnemyShip, Bullet, Barrier, Collectible } from './types';
 import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../../utils/constants';
 import BulletRenderer from './BulletRenderer';
 
@@ -13,6 +13,8 @@ interface MinimalGameRendererProps {
   screenHeight: number;
   bullets: Bullet[];
   enemies: EnemyShip[];
+  barriers: Barrier[];
+  collectibles: Collectible[];
   isSpecialMissileCharging?: boolean;
   specialMissileChargeProgress?: number;
   triggerSpecialFireEffect?: boolean;
@@ -85,6 +87,117 @@ function renderBullets(bullets: Bullet[]) {
   return bullets.map((bullet) => (
     <BulletRenderer key={bullet.id} bullet={bullet} />
   ));
+}
+
+function renderBarriers(
+  barriers: Barrier[], 
+  screenWidth: number, 
+  screenHeight: number,
+) {
+  return barriers.map((barrier) => {
+    const barrierY = barrier.y * screenHeight;
+    const segmentHeight = barrier.segmentHeight * screenHeight;
+    const segmentGap = barrier.segmentGap * screenWidth;
+    const openingStartX = barrier.openingPosition * screenWidth;
+    const openingEndX = openingStartX + (barrier.openingWidth * screenWidth);
+    const segmentWidth = barrier.segmentWidth * screenWidth;
+
+    return (
+      <Group key={barrier.id}>
+        {/* Render barrier segments */}
+        {Array.from({ length: barrier.segmentCount }, (_, index) => {
+          const segmentX = index * (segmentWidth + segmentGap);
+          
+          // Skip segments that are in the opening
+          if (segmentX + segmentWidth > openingStartX && segmentX < openingEndX) {
+            return null;
+          }
+          
+          return (
+            <Rect
+              key={`${barrier.id}-segment-${index}`}
+              x={segmentX}
+              y={barrierY}
+              width={segmentWidth}
+              height={segmentHeight}
+              color={barrier.color}
+            />
+          );
+        })}
+      </Group>
+    );
+  });
+}
+
+function renderCollectibles(
+  collectibles: Collectible[], 
+  screenWidth: number, 
+  screenHeight: number,
+  healthIcon: any,
+  shieldIcon: any,
+) {
+  return collectibles.map((collectible) => {
+    const transform = [
+      { translateX: collectible.x * screenWidth },
+      { translateY: collectible.y * screenHeight },
+    ];
+    
+    const COLLECTIBLE_SIZE = 30;
+    
+    return (
+      <Group
+        key={collectible.id}
+        transform={transform}
+      >
+        {collectible.type === 'health' && (
+          <Image
+            x={-COLLECTIBLE_SIZE / 2}
+            y={-COLLECTIBLE_SIZE / 2}
+            width={COLLECTIBLE_SIZE * 1.5}
+            height={COLLECTIBLE_SIZE * 1.5}
+            image={healthIcon}
+          />
+        )}
+        
+        {collectible.type === 'shield' && (
+          <Group>
+          {/* Background circle */}
+          <Circle
+            cx={0}
+            cy={0}
+            r={COLLECTIBLE_SIZE * 0.8}
+            color={collectible.color}
+          />
+          <Image
+            x={-COLLECTIBLE_SIZE * 0.65}
+            y={-COLLECTIBLE_SIZE * 0.65}
+            width={COLLECTIBLE_SIZE * 1.3}
+            height={COLLECTIBLE_SIZE * 1.3}
+            image={shieldIcon}
+          />
+          </Group>
+        )}
+        
+        {['sniper', 'shotgun', 'laser'].includes(collectible.type) && (
+          <Group>
+          {/* Background circle */}
+          <Circle
+            cx={0}
+            cy={0}
+            r={COLLECTIBLE_SIZE / 2}
+            color={collectible.color}
+          />
+          <Circle
+            cx={0}
+            cy={0}
+            r={COLLECTIBLE_SIZE / 6}
+            color="#ffffff"
+          />
+          </Group>
+        )}
+      </Group>
+    );
+  });
 }
 
 function renderPlayerHalo(
@@ -167,6 +280,8 @@ function GameRenderer({
   screenHeight,
   bullets,
   enemies,
+  barriers,
+  collectibles,
   isSpecialMissileCharging = false,
   specialMissileChargeProgress = 0,
   triggerSpecialFireEffect = false,
@@ -179,6 +294,10 @@ function GameRenderer({
   const enemy02Image = useImage(require('../../assets/images/enemies/enemy_02.png'));
   const enemy03Image = useImage(require('../../assets/images/enemies/enemy_03.png'));
   const enemy04Image = useImage(require('../../assets/images/enemies/enemy_04.png'));
+
+  // Load collectible images
+  const healthIcon = useImage(require('../../assets/images/collectibles/screwdriver-icon.png'));
+  const shieldIcon = useImage(require('../../assets/images/collectibles/shield.png'));
 
   // Memoize player ship path (fallback if image fails to load)
   const playerShipPath = useMemo(() => {
@@ -214,6 +333,18 @@ function GameRenderer({
     [bullets]
   );
 
+  // Memoize barrier rendering
+  const barrierElements = useMemo(
+    () => renderBarriers(barriers, screenWidth, screenHeight),
+    [barriers, screenWidth, screenHeight]
+  );
+
+  // Memoize collectible rendering
+  const collectibleElements = useMemo(
+    () => renderCollectibles(collectibles, screenWidth, screenHeight, healthIcon, shieldIcon),
+    [collectibles, screenWidth, screenHeight, healthIcon, shieldIcon]
+  );
+
   // Only render, no local enemy state or game loop
   return (
     <>
@@ -221,6 +352,10 @@ function GameRenderer({
       {enemyElements}
       {/* Render bullets */}
       {bulletElements}
+      {/* Render barriers */}
+      {barrierElements}
+      {/* Render collectibles */}
+      {collectibleElements}
       
       {/* Render special fire effect (behind player) */}
       {renderSpecialFireEffect(playerX, playerY, triggerSpecialFireEffect)}

@@ -9,8 +9,8 @@ import ExplosionOverlay from './interface/ExplosionOverlay';
 import CollisionSparkOverlay from './interface/CollisionSparkOverlay';
 import SpecialMissileButton from './interface/SpecialMissileButton';
 import MissileSelector from './interface/MissileSelector';
+import PlayerExplosionOverlay from './effects/PlayerExplosionOverlay';
 import { useGameLogic } from '../hooks/useGameLogic';
-
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function GameScreen() {
@@ -20,8 +20,11 @@ export default function GameScreen() {
     score,
     playerHealth,
     gameOver,
+    showGameOverOverlay,
     bullets,
     enemies,
+    barriers,
+    collectibles,
     explosions,
     collisionSparks,
     isSpecialMissileCharging,
@@ -36,6 +39,7 @@ export default function GameScreen() {
     setCurrentMissileType,
     removeExplosion,
     removeCollisionSpark,
+    setShowGameOverOverlay,
   } = useGameLogic();
 
   // Pan gesture for player movement
@@ -56,6 +60,7 @@ export default function GameScreen() {
             score={score}
             playerHealth={playerHealth}
             gameOver={gameOver}
+            showGameOverOverlay={showGameOverOverlay}
             onRestart={handleRestart}
           />
           
@@ -72,6 +77,8 @@ export default function GameScreen() {
             playerY={playerY}
             bullets={bullets}
             enemies={enemies}
+            barriers={barriers}
+            collectibles={collectibles}
             isSpecialMissileCharging={isSpecialMissileCharging}
             specialMissileChargeProgress={specialMissileChargeProgress}
             triggerSpecialFireEffect={triggerSpecialFireEffect}
@@ -87,6 +94,18 @@ export default function GameScreen() {
           <CollisionSparkOverlay
             collisionSparks={collisionSparks}
             onSparkFinish={removeCollisionSpark}
+          />
+          
+          {/* Player Explosion Overlay */}
+          <PlayerExplosionOverlay
+            isGameOver={gameOver}
+            playerX={playerX}
+            playerY={playerY}
+            onExplosionComplete={React.useCallback(() => {
+              setShowGameOverOverlay(true);
+              console.log('Player explosion complete - showing game over overlay');
+            }, [setShowGameOverOverlay])}
+            variant="advanced"
           />
           
           {/* Special Missile Button */}
