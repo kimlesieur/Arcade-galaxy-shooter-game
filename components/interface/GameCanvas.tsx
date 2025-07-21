@@ -29,8 +29,8 @@ export default function GameCanvas({
   return (
     <View style={styles.container}>
       <FractalGalaxyShader
-        width={SCREEN_WIDTH}
-        height={SCREEN_HEIGHT}
+        width={SCREEN_WIDTH * 2}
+        height={SCREEN_HEIGHT * 3}
       />
       <Canvas style={{ flex: 1 }}>
         <GameRenderer
