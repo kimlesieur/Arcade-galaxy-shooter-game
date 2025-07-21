@@ -90,6 +90,10 @@ interface GameObjectsActions {
     playCollisionSound: () => void;
   }) => void;
   
+  checkBulletBarrierCollisions: (params: {
+    addScore: (points: number) => void;
+  }) => void;
+  
   // Spawning
   spawnEnemy: () => void;
   spawnBarrier: () => void;
@@ -662,6 +666,80 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
           break; // Only hit one barrier at a time
         }
       }
+    }
+  },
+
+  checkBulletBarrierCollisions: ({ 
+    addScore, 
+  }) => {
+    const state = get();
+    
+    // Check bullet-barrier collisions (only for special missiles)
+    const newBullets = [...state.bullets];
+    const newBarriers = [...state.barriers];
+    let barriersChanged = false;
+
+    // Process bullets
+    for (let j = newBullets.length - 1; j >= 0; j--) {
+      const bullet = newBullets[j];
+      const isSpecialMissile = bullet.type === 'special';
+      
+      // Only special missiles can destroy barriers
+      if (!isSpecialMissile) continue;
+
+      // Check collision with all barriers
+      for (let i = newBarriers.length - 1; i >= 0; i--) {
+        const barrier = newBarriers[i];
+        const barrierY = barrier.y * SCREEN_HEIGHT;
+        const barrierHeight = barrier.segmentHeight * SCREEN_HEIGHT;
+
+        // Check if bullet is at the same vertical level as the barrier
+        if (
+          bullet.y - bullet.radius < barrierY + barrierHeight &&
+          bullet.y + bullet.radius > barrierY
+        ) {
+          // Check if bullet is hitting a barrier segment (not the opening)
+          const bulletCenterX = bullet.x;
+          const openingStartX = barrier.openingPosition * SCREEN_WIDTH;
+          const openingEndX = openingStartX + (barrier.openingWidth * SCREEN_WIDTH);
+
+          // Check if bullet is outside the opening
+          if (bulletCenterX < openingStartX || bulletCenterX > openingEndX) {
+            // Special missile hit a barrier segment
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            
+            // Add score for destroying barrier segment
+            addScore(barrier.damage); // Award points based on barrier damage
+            
+            // Create explosion effect at bullet position
+            get().addExplosion(bullet.x, bullet.y, 'red', bullet.type); // Use red as default for barrier explosions
+            
+            // Add collision spark effect at bullet position
+            get().addCollisionSpark(bullet.x, bullet.y, CollisionSparkType.SUBTLE);
+            
+            // Remove the barrier that was hit
+            newBarriers.splice(i, 1);
+            barriersChanged = true;
+            
+            // Special missiles continue through barriers, so don't destroy the bullet
+            break; // Only hit one barrier at a time
+          }
+        }
+      }
+    }
+
+    // Update state if there were changes
+    if (barriersChanged) {
+      // Calculate new barrier type counts
+      const newBarrierTypeCounts = { classic: 0, fire: 0, laser: 0, electric: 0, plasma: 0 };
+      newBarriers.forEach(barrier => {
+        newBarrierTypeCounts[barrier.type]++;
+      });
+      
+      set({ 
+        barriers: newBarriers,
+        barrierTypeCounts: newBarrierTypeCounts
+      });
     }
   },
 
