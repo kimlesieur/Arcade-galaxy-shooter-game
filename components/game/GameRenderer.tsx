@@ -133,6 +133,8 @@ function renderCollectibles(
   collectibles: Collectible[], 
   screenWidth: number, 
   screenHeight: number,
+  healthIcon: any,
+  shieldIcon: any,
 ) {
   return collectibles.map((collectible) => {
     const transform = [
@@ -147,41 +149,51 @@ function renderCollectibles(
         key={collectible.id}
         transform={transform}
       >
-        {/* Background circle */}
-        <Circle
-          cx={0}
-          cy={0}
-          r={COLLECTIBLE_SIZE / 2}
-          color={collectible.color}
-        />
-        
-        {/* Icon representation (simple shape for now) */}
         {collectible.type === 'health' && (
-          <Circle
-            cx={0}
-            cy={0}
-            r={COLLECTIBLE_SIZE / 4}
-            color="#ffffff"
+          <Image
+            x={-COLLECTIBLE_SIZE / 2}
+            y={-COLLECTIBLE_SIZE / 2}
+            width={COLLECTIBLE_SIZE * 1.5}
+            height={COLLECTIBLE_SIZE * 1.5}
+            image={healthIcon}
           />
         )}
         
         {collectible.type === 'shield' && (
-          <Rect
-            x={-COLLECTIBLE_SIZE / 4}
-            y={-COLLECTIBLE_SIZE / 4}
-            width={COLLECTIBLE_SIZE / 2}
-            height={COLLECTIBLE_SIZE / 2}
-            color="#ffffff"
+          <Group>
+          {/* Background circle */}
+          <Circle
+            cx={0}
+            cy={0}
+            r={COLLECTIBLE_SIZE * 0.8}
+            color={collectible.color}
           />
+          <Image
+            x={-COLLECTIBLE_SIZE * 0.65}
+            y={-COLLECTIBLE_SIZE * 0.65}
+            width={COLLECTIBLE_SIZE * 1.3}
+            height={COLLECTIBLE_SIZE * 1.3}
+            image={shieldIcon}
+          />
+          </Group>
         )}
         
         {['sniper', 'shotgun', 'laser'].includes(collectible.type) && (
+          <Group>
+          {/* Background circle */}
+          <Circle
+            cx={0}
+            cy={0}
+            r={COLLECTIBLE_SIZE / 2}
+            color={collectible.color}
+          />
           <Circle
             cx={0}
             cy={0}
             r={COLLECTIBLE_SIZE / 6}
             color="#ffffff"
           />
+          </Group>
         )}
       </Group>
     );
@@ -283,6 +295,10 @@ function GameRenderer({
   const enemy03Image = useImage(require('../../assets/images/enemies/enemy_03.png'));
   const enemy04Image = useImage(require('../../assets/images/enemies/enemy_04.png'));
 
+  // Load collectible images
+  const healthIcon = useImage(require('../../assets/images/collectibles/screwdriver-icon.png'));
+  const shieldIcon = useImage(require('../../assets/images/collectibles/shield.png'));
+
   // Memoize player ship path (fallback if image fails to load)
   const playerShipPath = useMemo(() => {
     const path = Skia.Path.Make();
@@ -325,8 +341,8 @@ function GameRenderer({
 
   // Memoize collectible rendering
   const collectibleElements = useMemo(
-    () => renderCollectibles(collectibles, screenWidth, screenHeight),
-    [collectibles, screenWidth, screenHeight]
+    () => renderCollectibles(collectibles, screenWidth, screenHeight, healthIcon, shieldIcon),
+    [collectibles, screenWidth, screenHeight, healthIcon, shieldIcon]
   );
 
   // Only render, no local enemy state or game loop

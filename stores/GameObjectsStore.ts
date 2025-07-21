@@ -442,7 +442,6 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
           speed: selectedCollectible.speed,
           type: selectedCollectible.type,
           color: selectedCollectible.color,
-          icon: selectedCollectible.icon,
           bonusValue: selectedCollectible.bonusValue,
           duration: selectedCollectible.duration,
           spawnChance: selectedCollectible.spawnChance,

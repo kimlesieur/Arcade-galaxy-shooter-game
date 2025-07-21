@@ -7,7 +7,6 @@ export interface CollectibleConfig {
   type: 'health' | 'shield' | 'sniper' | 'shotgun' | 'laser';
   speed: number; // downward speed in units per second
   color: string; // color for rendering
-  icon: string; // icon identifier
   bonusValue: number; // bonus value
   duration: number; // duration in milliseconds (0 for permanent)
   spawnChance: number; // chance of spawning (0-1)
@@ -22,10 +21,9 @@ export const COLLECTIBLE_CONFIGS: Record<string, CollectibleConfig> = {
     type: 'health',
     speed: 60, // Slower than enemies for easier collection
     color: '#00ff00', // Green
-    icon: 'screwdriver', // Screwdriver icon for health
     bonusValue: 1, // +1 health
     duration: 0, // Permanent
-    spawnChance: 0.15, // 15% chance
+    spawnChance: 0.10, // 50% chance
     description: 'Restores 1 health point',
   },
 
@@ -35,10 +33,9 @@ export const COLLECTIBLE_CONFIGS: Record<string, CollectibleConfig> = {
     type: 'shield',
     speed: 60,
     color: '#0080ff', // Blue
-    icon: 'shield', // Shield icon
     bonusValue: 1, // Shield level (placeholder for now)
     duration: 0, // Permanent (will be implemented later)
-    spawnChance: 0.10, // 10% chance
+    spawnChance: 0.50, // 10% chance
     description: 'Provides shield protection (coming soon)',
   },
 
@@ -48,7 +45,6 @@ export const COLLECTIBLE_CONFIGS: Record<string, CollectibleConfig> = {
     type: 'sniper',
     speed: 60,
     color: '#00ffff', // Cyan
-    icon: 'sniper', // Sniper scope icon
     bonusValue: 1,
     duration: 15000, // 15 seconds
     spawnChance: 0.20, // 20% chance (increased from 12%)
@@ -61,7 +57,6 @@ export const COLLECTIBLE_CONFIGS: Record<string, CollectibleConfig> = {
     type: 'shotgun',
     speed: 60,
     color: '#ff8800', // Orange
-    icon: 'shotgun', // Shotgun icon
     bonusValue: 1,
     duration: 15000, // 15 seconds
     spawnChance: 0.20, // 20% chance (increased from 12%)
@@ -74,10 +69,9 @@ export const COLLECTIBLE_CONFIGS: Record<string, CollectibleConfig> = {
     type: 'laser',
     speed: 60,
     color: '#ff0080', // Pink
-    icon: 'laser', // Laser beam icon
     bonusValue: 1,
     duration: 15000, // 15 seconds
-    spawnChance: 0.15, // 15% chance (increased from 10%)
+    spawnChance: 0, // 15% chance (increased from 10%)
     description: 'Laser weapon for 15 seconds',
   },
 };
@@ -100,7 +94,6 @@ export function createCollectibleFromConfig(
     speed: config.speed,
     type: config.type,
     color: config.color,
-    icon: config.icon,
     bonusValue: config.bonusValue,
     duration: config.duration,
     spawnChance: config.spawnChance,
