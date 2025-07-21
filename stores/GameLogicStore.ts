@@ -11,6 +11,7 @@ export interface GameState {
   score: number;
   playerHealth: number;
   gameOver: boolean;
+  showGameOverOverlay: boolean; // New state to control when to show the overlay
   // Special missile state
   isSpecialMissileCharging: boolean;
   specialMissileChargeProgress: number;
@@ -22,6 +23,7 @@ interface GameActions {
   setScore: (score: number) => void;
   setPlayerHealth: (health: number) => void;
   setGameOver: (gameOver: boolean) => void;
+  setShowGameOverOverlay: (show: boolean) => void;
   resetGame: () => void;
   decrementHealth: () => void;
   addScore: (points: number) => void;
@@ -42,6 +44,7 @@ export const useGameLogicStore = create<GameState & GameActions>()(
       score: 0,
       playerHealth: 3,
       gameOver: false,
+      showGameOverOverlay: false,
       // Special missile state
       isSpecialMissileCharging: false,
       specialMissileChargeProgress: 0,
@@ -56,10 +59,13 @@ export const useGameLogicStore = create<GameState & GameActions>()(
       
       setGameOver: (gameOver: boolean) => set({ gameOver }),
       
+      setShowGameOverOverlay: (show: boolean) => set({ showGameOverOverlay: show }),
+      
       resetGame: () => set({
         score: 0,
         playerHealth: 3,
         gameOver: false,
+        showGameOverOverlay: false,
         playerX: SCREEN_WIDTH / 2,
         // Reset special missile state
         isSpecialMissileCharging: false,
@@ -72,7 +78,8 @@ export const useGameLogicStore = create<GameState & GameActions>()(
         const newHealth = playerHealth - 1;
         set({ 
           playerHealth: newHealth,
-          gameOver: newHealth <= 0 
+          gameOver: newHealth <= 0,
+          showGameOverOverlay: false // Don't show overlay immediately, wait for explosion
         });
       },
       

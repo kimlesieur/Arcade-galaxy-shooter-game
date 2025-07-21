@@ -14,7 +14,9 @@ export const useGameLogic = () => {
     score,
     playerHealth,
     gameOver,
+    showGameOverOverlay,
     setPlayerX,
+    setShowGameOverOverlay,
     resetGame: resetGameState,
     decrementHealth,
     addScore,
@@ -201,6 +203,7 @@ export const useGameLogic = () => {
     score,
     playerHealth,
     gameOver,
+    showGameOverOverlay,
     playerPosRef,
     
     // Game objects
@@ -221,6 +224,7 @@ export const useGameLogic = () => {
     
     // Actions
     setPlayerX,
+    setShowGameOverOverlay,
     handleRestart,
     shootSpecialMissile,
     removeExplosion,

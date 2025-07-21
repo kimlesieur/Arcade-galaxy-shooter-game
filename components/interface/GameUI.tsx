@@ -5,10 +5,11 @@ interface GameUIProps {
   score: number;
   playerHealth: number;
   gameOver: boolean;
+  showGameOverOverlay: boolean;
   onRestart: () => void;
 }
 
-export default function GameUI({ score, playerHealth, gameOver, onRestart }: GameUIProps) {
+export default function GameUI({ score, playerHealth, showGameOverOverlay, onRestart }: GameUIProps) {
   return (
     <>
       {/* Score Display */}
@@ -26,7 +27,7 @@ export default function GameUI({ score, playerHealth, gameOver, onRestart }: Gam
       </View>
       
       {/* Game Over Overlay */}
-      {gameOver && (
+      {showGameOverOverlay && (
         <View style={styles.gameOverOverlay}>
           <Text style={styles.gameOverTitle}>Game Over</Text>
           <Text style={styles.gameOverScore}>Score: {score}</Text>
