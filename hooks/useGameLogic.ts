@@ -47,12 +47,14 @@ export const useGameLogic = () => {
   const {
     bullets,
     enemies,
+    barriers,
     explosions,
     collisionSparks,
     startGameLoop,
     stopGameLoop,
     checkBulletEnemyCollisions,
     checkPlayerEnemyCollisions,
+    checkPlayerBarrierCollisions,
     addBullet,
     removeExplosion,
     removeCollisionSpark,
@@ -142,7 +144,15 @@ export const useGameLogic = () => {
       decrementHealth,
       playCollisionSound,
     });
-  }, [gameOver, playerX, playerY, bullets, enemies, checkBulletEnemyCollisions, checkPlayerEnemyCollisions, addScore, decrementHealth, playCollisionSound]);
+
+    // Check player-barrier collisions
+    checkPlayerBarrierCollisions({
+      playerX,
+      playerY,
+      decrementHealth,
+      playCollisionSound,
+    });
+  }, [gameOver, playerX, playerY, bullets, enemies, barriers, checkBulletEnemyCollisions, checkPlayerEnemyCollisions, checkPlayerBarrierCollisions, addScore, decrementHealth, playCollisionSound]);
 
   // Missile type selection state
   const [currentMissileType, setCurrentMissileType] = useState('normal');
@@ -190,6 +200,7 @@ export const useGameLogic = () => {
     // Game objects
     bullets,
     enemies,
+    barriers,
     explosions,
     collisionSparks,
     

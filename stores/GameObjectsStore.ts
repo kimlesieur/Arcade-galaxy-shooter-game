@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Bullet, EnemyShip } from '../components/game/types';
+import { Bullet, EnemyShip, Barrier } from '../components/game/types';
 import { checkCollision } from '../components/game/utils';
 import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../utils/constants';
 import { Dimensions } from 'react-native';
@@ -7,6 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { useSettingsStore } from './SettingsStore';
 import { CollisionSparkType } from '../utils/collisionSparkConfigs';
 import { ENEMY_CONFIGS } from '../utils/enemyConfigs';
+import { BARRIER_CONFIGS } from '../utils/barrierConfigs';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -20,6 +21,11 @@ interface GameObjectsState {
   enemyTypeCounts: Record<'red' | 'purple' | 'blue' | 'green' | 'orange', number>; // Track counts for all enemy types
   spawnTimer: number;
   lastFrameTime: number | null;
+  
+  // Barriers
+  barriers: Barrier[];
+  barrierTypeCounts: Record<'classic' | 'fire' | 'laser' | 'electric' | 'plasma', number>; // Track counts for all barrier types
+  barrierSpawnTimer: number;
   
   // Explosions
   explosions: { id: string; x: number; y: number; type: 'red' | 'purple' | 'blue' | 'green' | 'orange'; bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser' }[];
@@ -44,6 +50,12 @@ interface GameObjectsActions {
   updateEnemies: (delta: number) => void;
   removeEnemy: (id: string) => void;
   resetEnemies: () => void;
+  
+  // Barrier actions
+  addBarrier: (barrier: Barrier) => void;
+  updateBarriers: (delta: number) => void;
+  removeBarrier: (id: string) => void;
+  resetBarriers: () => void;
   
   // Explosion actions
   addExplosion: (x: number, y: number, type: 'red' | 'purple' | 'blue' | 'green' | 'orange', bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser') => void;
@@ -71,8 +83,16 @@ interface GameObjectsActions {
     playCollisionSound: () => void;
   }) => void;
   
+  checkPlayerBarrierCollisions: (params: {
+    playerX: number;
+    playerY: number;
+    decrementHealth: (damage: number) => void;
+    playCollisionSound: () => void;
+  }) => void;
+  
   // Spawning
   spawnEnemy: () => void;
+  spawnBarrier: () => void;
   
   // Reset all
   resetAll: () => void;
@@ -85,6 +105,9 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
   enemyTypeCounts: { red: 0, purple: 0, blue: 0, green: 0, orange: 0 },
   spawnTimer: 0,
   lastFrameTime: null,
+  barriers: [],
+  barrierTypeCounts: { classic: 0, fire: 0, laser: 0, electric: 0, plasma: 0 },
+  barrierSpawnTimer: 0,
   explosions: [],
   collisionSparks: [],
   animationFrameId: null,
@@ -229,6 +252,113 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
     });
   },
 
+  // Barrier actions
+  addBarrier: (barrier: Barrier) => {
+    set((state) => ({
+      barriers: [...state.barriers, barrier],
+      barrierTypeCounts: {
+        ...state.barrierTypeCounts,
+        [barrier.type]: state.barrierTypeCounts[barrier.type] + 1
+      }
+    }));
+  },
+
+  updateBarriers: (delta: number) => {
+    const BARRIER_SPAWN_INTERVAL = 3000; // Spawn barriers less frequently than enemies
+    
+    set((state) => {
+      // Update spawn timer
+      const newBarrierSpawnTimer = state.barrierSpawnTimer + delta * 1000;
+      
+      // Move barriers and handle off-screen removal
+      let updatedBarriers = state.barriers.map((barrier) => ({
+        ...barrier,
+        y: barrier.y + (barrier.speed * delta) / SCREEN_HEIGHT,
+      }));
+
+      // Remove barriers that are off screen
+      updatedBarriers = updatedBarriers.filter((barrier) => {
+        return barrier.y * SCREEN_HEIGHT < SCREEN_HEIGHT + 50; // Keep some margin
+      });
+
+      // Spawn new barriers if enough time has passed and there are fewer than 2 barriers on screen
+      if (newBarrierSpawnTimer >= BARRIER_SPAWN_INTERVAL && updatedBarriers.length < 2) {
+        // Get barrier types from configuration
+        const barrierTypes = Object.values(BARRIER_CONFIGS);
+        
+        // Select barrier type based on spawn chances
+        const random = Math.random();
+        let cumulativeChance = 0;
+        let selectedBarrier = barrierTypes[0]; // default to first barrier
+        
+        for (const barrierType of barrierTypes) {
+          cumulativeChance += barrierType.spawnChance;
+          if (random <= cumulativeChance) {
+            selectedBarrier = barrierType;
+            break;
+          }
+        }
+        
+        // Calculate opening position (random position for the opening)
+        const openingPosition = Math.random() * (1 - selectedBarrier.properties.openingWidth);
+        
+        const newBarrier: Barrier = {
+          id: Math.random().toString(36).substr(2, 9),
+          y: 0,
+          speed: selectedBarrier.speed,
+          type: selectedBarrier.id as 'classic' | 'fire' | 'laser' | 'electric' | 'plasma',
+          color: selectedBarrier.color,
+          damage: selectedBarrier.damage,
+          openingPosition,
+          openingWidth: selectedBarrier.properties.openingWidth,
+          segmentCount: selectedBarrier.properties.segmentCount,
+          segmentWidth: selectedBarrier.properties.segmentWidth,
+          segmentGap: selectedBarrier.properties.segmentGap,
+          segmentHeight: selectedBarrier.properties.segmentHeight,
+        };
+        
+        updatedBarriers.push(newBarrier);
+      }
+
+      // Calculate barrier type counts
+      const newBarrierTypeCounts = { classic: 0, fire: 0, laser: 0, electric: 0, plasma: 0 };
+      updatedBarriers.forEach(barrier => {
+        newBarrierTypeCounts[barrier.type]++;
+      });
+
+      return {
+        barriers: updatedBarriers,
+        barrierSpawnTimer: newBarrierSpawnTimer >= BARRIER_SPAWN_INTERVAL ? 0 : newBarrierSpawnTimer,
+        barrierTypeCounts: newBarrierTypeCounts
+      };
+    });
+  },
+
+  removeBarrier: (id: string) => {
+    set((state) => {
+      const updatedBarriers = state.barriers.filter((barrier) => barrier.id !== id);
+      
+      // Calculate new barrier type counts
+      const newBarrierTypeCounts = { classic: 0, fire: 0, laser: 0, electric: 0, plasma: 0 };
+      updatedBarriers.forEach(barrier => {
+        newBarrierTypeCounts[barrier.type]++;
+      });
+      
+      return {
+        barriers: updatedBarriers,
+        barrierTypeCounts: newBarrierTypeCounts
+      };
+    });
+  },
+
+  resetBarriers: () => {
+    set({ 
+      barriers: [], 
+      barrierTypeCounts: { classic: 0, fire: 0, laser: 0, electric: 0, plasma: 0 }, 
+      barrierSpawnTimer: 0
+    });
+  },
+
   // Explosion actions
   addExplosion: (x: number, y: number, type: 'red' | 'purple' | 'blue' | 'green' | 'orange', bulletType?: 'normal' | 'special' | 'sniper' | 'shotgun' | 'laser') => {
     set((state) => ({
@@ -299,6 +429,7 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
       // Update game objects
       get().updateBullets(delta);
       get().updateEnemies(delta);
+      get().updateBarriers(delta);
 
       const animationFrameId = requestAnimationFrame(loop);
       set({ animationFrameId });
@@ -462,9 +593,67 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
     }
   },
 
+  checkPlayerBarrierCollisions: ({ 
+    playerX, 
+    playerY, 
+    decrementHealth, 
+    playCollisionSound,
+  }) => {
+    const state = get();
+    
+    // Check player-barrier collisions
+    for (let i = state.barriers.length - 1; i >= 0; i--) {
+      const barrier = state.barriers[i];
+      const barrierY = barrier.y * SCREEN_HEIGHT;
+      const barrierHeight = barrier.segmentHeight * SCREEN_HEIGHT;
+
+      // Check if player is at the same vertical level as the barrier
+      if (
+        playerY - PLAYER_HEIGHT / 2 < barrierY + barrierHeight &&
+        playerY + PLAYER_HEIGHT / 2 > barrierY
+      ) {
+        // Check if player is hitting a barrier segment (not the opening)
+        const playerCenterX = playerX;
+        const openingStartX = barrier.openingPosition * SCREEN_WIDTH;
+        const openingEndX = openingStartX + (barrier.openingWidth * SCREEN_WIDTH);
+
+        // Check if player is outside the opening
+        if (playerCenterX < openingStartX || playerCenterX > openingEndX) {
+          // Player hit a barrier segment
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
+          playCollisionSound();
+          decrementHealth(barrier.damage);
+          
+          // Add collision spark effect at player position
+          get().addCollisionSpark(playerX, playerY, CollisionSparkType.SUBTLE);
+          
+          // Remove the barrier that was hit
+          const newBarriers = state.barriers.filter((b, index) => index !== i);
+          
+          // Calculate new barrier type counts
+          const newBarrierTypeCounts = { classic: 0, fire: 0, laser: 0, electric: 0, plasma: 0 };
+          newBarriers.forEach(barrier => {
+            newBarrierTypeCounts[barrier.type]++;
+          });
+          
+          set({ 
+            barriers: newBarriers,
+            barrierTypeCounts: newBarrierTypeCounts
+          });
+          
+          break; // Only hit one barrier at a time
+        }
+      }
+    }
+  },
+
   // Spawning
   spawnEnemy: () => {
     // This is now handled in updateEnemies
+  },
+
+  spawnBarrier: () => {
+    // This is now handled in updateBarriers
   },
 
   // Reset all
@@ -479,6 +668,9 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
       enemyTypeCounts: { red: 0, purple: 0, blue: 0, green: 0, orange: 0 },
       spawnTimer: 0,
       lastFrameTime: null,
+      barriers: [],
+      barrierTypeCounts: { classic: 0, fire: 0, laser: 0, electric: 0, plasma: 0 },
+      barrierSpawnTimer: 0,
       explosions: [],
       collisionSparks: [],
       animationFrameId: null,

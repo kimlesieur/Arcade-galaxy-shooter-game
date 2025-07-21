@@ -89,4 +89,19 @@ export interface EnemyShip {
   points: number; // points awarded when destroyed
 }
 
+export interface Barrier {
+  id: string;
+  y: number; // vertical position (0-1, as a fraction of screen height)
+  speed: number; // downward speed in units per second
+  type: 'classic' | 'fire' | 'laser' | 'electric' | 'plasma'; // barrier type
+  color: string; // color for rendering
+  damage: number; // damage dealt to player on collision
+  openingPosition: number; // horizontal position of the opening (0-1, as a fraction of screen width)
+  openingWidth: number; // width of the opening (0-1, as a fraction of screen width)
+  segmentCount: number; // number of barrier segments
+  segmentWidth: number; // width of each segment (0-1, as a fraction of screen width)
+  segmentGap: number; // gap between segments (0-1, as a fraction of screen width)
+  segmentHeight: number; // height of each segment (0-1, as a fraction of screen height)
+}
+
 export type Bullet = Projectile;

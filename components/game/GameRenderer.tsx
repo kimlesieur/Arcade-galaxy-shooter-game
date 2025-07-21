@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Group, Path, Skia, Rect, Circle, Image, useImage } from '@shopify/react-native-skia';
-import { EnemyShip, Bullet } from './types';
+import { EnemyShip, Bullet, Barrier } from './types';
 import { PLAYER_WIDTH, PLAYER_HEIGHT, ENEMY_WIDTH, ENEMY_HEIGHT } from '../../utils/constants';
 import BulletRenderer from './BulletRenderer';
 
@@ -13,6 +13,7 @@ interface MinimalGameRendererProps {
   screenHeight: number;
   bullets: Bullet[];
   enemies: EnemyShip[];
+  barriers: Barrier[];
   isSpecialMissileCharging?: boolean;
   specialMissileChargeProgress?: number;
   triggerSpecialFireEffect?: boolean;
@@ -85,6 +86,74 @@ function renderBullets(bullets: Bullet[]) {
   return bullets.map((bullet) => (
     <BulletRenderer key={bullet.id} bullet={bullet} />
   ));
+}
+
+function renderBarriers(
+  barriers: Barrier[], 
+  screenWidth: number, 
+  screenHeight: number,
+) {
+  return barriers.map((barrier) => {
+    const barrierY = barrier.y * screenHeight;
+    const segmentHeight = barrier.segmentHeight * screenHeight;
+    const segmentGap = barrier.segmentGap * screenWidth;
+    const openingStartX = barrier.openingPosition * screenWidth;
+    const openingEndX = openingStartX + (barrier.openingWidth * screenWidth);
+
+    const segments: React.ReactElement[] = [];
+
+    // Calculate available width for segments (total width minus opening width)
+    const availableWidth = screenWidth - (barrier.openingWidth * screenWidth);
+    
+    // Calculate how many segments we can fit in the available width
+    const segmentCount = barrier.segmentCount;
+    const totalGapsWidth = (segmentCount - 1) * segmentGap;
+    const totalSegmentsWidth = availableWidth - totalGapsWidth;
+    const dynamicSegmentWidth = totalSegmentsWidth / segmentCount;
+
+    let currentX = 0;
+
+    // Create segments before the opening
+    const segmentsBeforeOpening = Math.floor(segmentCount * (openingStartX / screenWidth));
+    for (let i = 0; i < segmentsBeforeOpening; i++) {
+      segments.push(
+        <Rect
+          key={`${barrier.id}-before-${i}`}
+          x={currentX}
+          y={barrierY}
+          width={dynamicSegmentWidth}
+          height={segmentHeight}
+          color={barrier.color}
+        />
+      );
+      currentX += dynamicSegmentWidth + segmentGap;
+    }
+
+    // Skip the opening
+    currentX = openingEndX;
+
+    // Create segments after the opening
+    const segmentsAfterOpening = segmentCount - segmentsBeforeOpening;
+    for (let i = 0; i < segmentsAfterOpening; i++) {
+      segments.push(
+        <Rect
+          key={`${barrier.id}-after-${i}`}
+          x={currentX}
+          y={barrierY}
+          width={dynamicSegmentWidth}
+          height={segmentHeight}
+          color={barrier.color}
+        />
+      );
+      currentX += dynamicSegmentWidth + segmentGap;
+    }
+
+    return (
+      <Group key={barrier.id}>
+        {segments}
+      </Group>
+    );
+  });
 }
 
 function renderPlayerHalo(
@@ -167,6 +236,7 @@ function GameRenderer({
   screenHeight,
   bullets,
   enemies,
+  barriers,
   isSpecialMissileCharging = false,
   specialMissileChargeProgress = 0,
   triggerSpecialFireEffect = false,
@@ -214,6 +284,12 @@ function GameRenderer({
     [bullets]
   );
 
+  // Memoize barrier rendering
+  const barrierElements = useMemo(
+    () => renderBarriers(barriers, screenWidth, screenHeight),
+    [barriers, screenWidth, screenHeight]
+  );
+
   // Only render, no local enemy state or game loop
   return (
     <>
@@ -221,6 +297,8 @@ function GameRenderer({
       {enemyElements}
       {/* Render bullets */}
       {bulletElements}
+      {/* Render barriers */}
+      {barrierElements}
       
       {/* Render special fire effect (behind player) */}
       {renderSpecialFireEffect(playerX, playerY, triggerSpecialFireEffect)}
