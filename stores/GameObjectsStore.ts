@@ -283,41 +283,59 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
 
       // Spawn new barriers if enough time has passed and there are fewer than 2 barriers on screen
       if (newBarrierSpawnTimer >= BARRIER_SPAWN_INTERVAL && updatedBarriers.length < 2) {
-        // Get barrier types from configuration
-        const barrierTypes = Object.values(BARRIER_CONFIGS);
+        // Check if there's enough distance between existing barriers (40% of screen height minimum)
+        const MIN_BARRIER_DISTANCE = 0.4; // 40% of screen height
+        let canSpawn = true;
         
-        // Select barrier type based on spawn chances
-        const random = Math.random();
-        let cumulativeChance = 0;
-        let selectedBarrier = barrierTypes[0]; // default to first barrier
-        
-        for (const barrierType of barrierTypes) {
-          cumulativeChance += barrierType.spawnChance;
-          if (random <= cumulativeChance) {
-            selectedBarrier = barrierType;
-            break;
+        if (updatedBarriers.length > 0) {
+          // Check distance from the closest existing barrier
+          const closestBarrier = updatedBarriers.reduce((closest, barrier) => {
+            return barrier.y < closest.y ? barrier : closest;
+          });
+          
+          // If the closest barrier is too close to the top (where new barrier would spawn), don't spawn
+          if (closestBarrier.y < MIN_BARRIER_DISTANCE) {
+            canSpawn = false;
           }
         }
         
-        // Calculate opening position (random position for the opening)
-        const openingPosition = Math.random() * (1 - selectedBarrier.properties.openingWidth);
-        
-        const newBarrier: Barrier = {
-          id: Math.random().toString(36).substr(2, 9),
-          y: 0,
-          speed: selectedBarrier.speed,
-          type: selectedBarrier.id as 'classic' | 'fire' | 'laser' | 'electric' | 'plasma',
-          color: selectedBarrier.color,
-          damage: selectedBarrier.damage,
-          openingPosition,
-          openingWidth: selectedBarrier.properties.openingWidth,
-          segmentCount: selectedBarrier.properties.segmentCount,
-          segmentWidth: selectedBarrier.properties.segmentWidth,
-          segmentGap: selectedBarrier.properties.segmentGap,
-          segmentHeight: selectedBarrier.properties.segmentHeight,
-        };
-        
-        updatedBarriers.push(newBarrier);
+        if (canSpawn) {
+          // Get barrier types from configuration
+          const barrierTypes = Object.values(BARRIER_CONFIGS);
+          
+          // Select barrier type based on spawn chances
+          const random = Math.random();
+          let cumulativeChance = 0;
+          let selectedBarrier = barrierTypes[0]; // default to first barrier
+          
+          for (const barrierType of barrierTypes) {
+            cumulativeChance += barrierType.spawnChance;
+            if (random <= cumulativeChance) {
+              selectedBarrier = barrierType;
+              break;
+            }
+          }
+          
+          // Calculate opening position (random position for the opening)
+          const openingPosition = Math.random() * (1 - selectedBarrier.properties.openingWidth);
+          
+          const newBarrier: Barrier = {
+            id: Math.random().toString(36).substr(2, 9),
+            y: 0,
+            speed: selectedBarrier.speed,
+            type: selectedBarrier.id as 'classic' | 'fire' | 'laser' | 'electric' | 'plasma',
+            color: selectedBarrier.color,
+            damage: selectedBarrier.damage,
+            openingPosition,
+            openingWidth: selectedBarrier.properties.openingWidth,
+            segmentCount: selectedBarrier.properties.segmentCount,
+            segmentWidth: selectedBarrier.properties.segmentWidth,
+            segmentGap: selectedBarrier.properties.segmentGap,
+            segmentHeight: selectedBarrier.properties.segmentHeight,
+          };
+          
+          updatedBarriers.push(newBarrier);
+        }
       }
 
       // Calculate barrier type counts
