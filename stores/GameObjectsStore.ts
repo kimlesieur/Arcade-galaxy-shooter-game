@@ -799,13 +799,42 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
         playerY - PLAYER_HEIGHT / 2 < barrierY + barrierHeight &&
         playerY + PLAYER_HEIGHT / 2 > barrierY
       ) {
-        // Check if player is hitting a barrier segment (not the opening)
-        const playerCenterX = playerX;
+        // Calculate barrier segment positions (same logic as rendering)
+        const segmentGap = barrier.segmentGap * SCREEN_WIDTH;
         const openingStartX = barrier.openingPosition * SCREEN_WIDTH;
         const openingEndX = openingStartX + (barrier.openingWidth * SCREEN_WIDTH);
+        const segmentWidth = barrier.segmentWidth * SCREEN_WIDTH;
 
-        // Check if player is outside the opening
-        if (playerCenterX < openingStartX || playerCenterX > openingEndX) {
+        // Check collision with each individual segment
+        let collisionDetected = false;
+        
+        for (let segmentIndex = 0; segmentIndex < barrier.segmentCount; segmentIndex++) {
+          const segmentX = segmentIndex * (segmentWidth + segmentGap);
+          
+          // Skip segments that are in the opening
+          if (segmentX + segmentWidth > openingStartX && segmentX < openingEndX) {
+            continue;
+          }
+          
+          // Check collision between player and this specific segment
+          if (
+            checkCollision(
+              playerX - PLAYER_WIDTH / 2,
+              playerY - PLAYER_HEIGHT / 2,
+              PLAYER_WIDTH,
+              PLAYER_HEIGHT,
+              segmentX,
+              barrierY,
+              segmentWidth,
+              barrierHeight
+            )
+          ) {
+            collisionDetected = true;
+            break;
+          }
+        }
+
+        if (collisionDetected) {
           // Player hit a barrier segment
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
           playCollisionSound();
@@ -863,13 +892,42 @@ export const useGameObjectsStore = create<GameObjectsState & GameObjectsActions>
           bullet.y - bullet.radius < barrierY + barrierHeight &&
           bullet.y + bullet.radius > barrierY
         ) {
-          // Check if bullet is hitting a barrier segment (not the opening)
-          const bulletCenterX = bullet.x;
+          // Calculate barrier segment positions (same logic as rendering)
+          const segmentGap = barrier.segmentGap * SCREEN_WIDTH;
           const openingStartX = barrier.openingPosition * SCREEN_WIDTH;
           const openingEndX = openingStartX + (barrier.openingWidth * SCREEN_WIDTH);
+          const segmentWidth = barrier.segmentWidth * SCREEN_WIDTH;
 
-          // Check if bullet is outside the opening
-          if (bulletCenterX < openingStartX || bulletCenterX > openingEndX) {
+          // Check collision with each individual segment
+          let collisionDetected = false;
+          
+          for (let segmentIndex = 0; segmentIndex < barrier.segmentCount; segmentIndex++) {
+            const segmentX = segmentIndex * (segmentWidth + segmentGap);
+            
+            // Skip segments that are in the opening
+            if (segmentX + segmentWidth > openingStartX && segmentX < openingEndX) {
+              continue;
+            }
+            
+            // Check collision between bullet and this specific segment
+            if (
+              checkCollision(
+                bullet.x - bullet.radius,
+                bullet.y - bullet.radius,
+                bullet.radius * 2,
+                bullet.radius * 2,
+                segmentX,
+                barrierY,
+                segmentWidth,
+                barrierHeight
+              )
+            ) {
+              collisionDetected = true;
+              break;
+            }
+          }
+
+          if (collisionDetected) {
             // Special missile hit a barrier segment
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             
